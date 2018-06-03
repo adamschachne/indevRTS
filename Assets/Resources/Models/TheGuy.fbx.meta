@@ -1,40 +1,14 @@
 fileFormatVersion: 2
-guid: 0b98b1a940e5bdd47b402959a410c00f
+guid: 889546444f8720c4d8279a52719e995a
 ModelImporter:
   serializedVersion: 22
   fileIDToRecycleName:
-    100000: aad3045d48a1081578b12e4c1dea9c1c
-    100002: Cylinder
-    100004: //RootNode
-    100006: HeadMale_F
-    100008: HeadMale_S
-    100010: t pose
-    400000: aad3045d48a1081578b12e4c1dea9c1c
-    400002: Cylinder
-    400004: //RootNode
-    400006: HeadMale_F
-    400008: HeadMale_S
-    400010: t pose
-    2100000: aad3045d48a1081578b12e4c1dea9c1c
-    2100002: t pose
-    2100004: HeadMale_F
-    2100006: HeadMale_S
-    2100008: Material.002
-    2300000: aad3045d48a1081578b12e4c1dea9c1c
-    2300002: Cylinder
-    2300004: HeadMale_F
-    2300006: HeadMale_S
-    2300008: t pose
-    3300000: aad3045d48a1081578b12e4c1dea9c1c
-    3300002: Cylinder
-    3300004: HeadMale_F
-    3300006: HeadMale_S
-    3300008: t pose
-    4300000: aad3045d48a1081578b12e4c1dea9c1c
-    4300002: t pose
-    4300004: HeadMale_F
-    4300006: HeadMale_S
-    4300008: Cylinder
+    100000: //RootNode
+    400000: //RootNode
+    2100000: TheGuyMaterial
+    2300000: //RootNode
+    3300000: //RootNode
+    4300000: TheGuy
   externalObjects: {}
   materials:
     importMaterials: 1
