@@ -10,6 +10,7 @@ public class Selection : MonoBehaviour {
     enum Mode { None, Remove, Add };
     Mode selectionMode;
     Vector3 mousePositionInitial;
+    Vector3[] selFrustumCorners;
 
     // Use this for initialization
     void Start() {
@@ -51,7 +52,8 @@ public class Selection : MonoBehaviour {
         }
 
         // Releases Left click
-        if (Input.GetMouseButtonUp(0)) {            
+        if (Input.GetMouseButtonUp(0)) {
+            // in place
             if (Vector3.Distance(Input.mousePosition, mousePositionInitial) == 0.0f) {
                 RaycastHit hitInfo = new RaycastHit();
                 if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
@@ -68,13 +70,15 @@ public class Selection : MonoBehaviour {
                         }
                     }
                 }
-            } else {
+            }
+            // box selection 
+            else {
                 if (this.selectionMode == Mode.None) {
                     this.DeselectAll();
                 }
                 foreach (Selectable selectableObject in FindObjectsOfType<Selectable>()) {
                     GameObject obj = selectableObject.gameObject;
-                    if (IsWithinSelectionBounds(obj)) {
+                    if (this.IsWithinSelectionBoundsPoints(obj)) {
                         if (this.selectionMode == Mode.Remove) {
                             RemoveSelection(obj);
                         } else {
@@ -85,6 +89,14 @@ public class Selection : MonoBehaviour {
             }
             leftClickHeld = false;
         }
+        /* DEBUG */
+        //if (selFrustumCorners == null) {
+        //    return;
+        //}
+        //foreach (Vector3 ray in selFrustumCorners) {
+            
+        //    Debug.DrawRay(Camera.main.transform.position, ray, Color.yellow);
+        //}        
     }
     
     void OnGUI() {
@@ -93,6 +105,33 @@ public class Selection : MonoBehaviour {
             var rect = Utils.GetScreenRect(mousePositionInitial, Input.mousePosition);
             Utils.DrawScreenRect(rect, new Color(0.8f, 0.8f, 0.95f, 0.25f));
             Utils.DrawScreenRectBorder(rect, 2, new Color(0.8f, 0.8f, 0.95f));
+
+            /* ----------- DEBUG ----------- */
+            //Debug.Log("rect: " + rect.y + " " + rect.yMax);
+            //float x = rect.x / Screen.width;
+            //float y = 1.0f - rect.y / Screen.height;
+            //float xMax = rect.xMax / Screen.width;
+            //float yMax = 1.0f - rect.yMax / Screen.height;
+
+            //Rect selRect = new Rect(x, y, Mathf.Abs(xMax - x), yMax - y);
+            //Debug.Log("viewrect: " + selRect);
+
+            //var camera = GetComponent<Camera>();
+            //Vector3[] frustumCorners = new Vector3[4];
+            //Vector3[] selFrustumCorners = new Vector3[4];
+            //camera.CalculateFrustumCorners(new Rect(0, 0, 1, 1), camera.farClipPlane, Camera.MonoOrStereoscopicEye.Mono, frustumCorners);
+            //camera.CalculateFrustumCorners(selRect, camera.farClipPlane, Camera.MonoOrStereoscopicEye.Mono, selFrustumCorners);
+
+            //for (int i = 0; i < 4; i++) {
+            //    var worldSpaceCorner = camera.transform.TransformVector(frustumCorners[i]);
+            //    Debug.DrawRay(camera.transform.position, worldSpaceCorner, Color.yellow);
+            //}
+
+            //for (int i = 0; i < 4; i++) {
+            //    var worldSpaceCorner = camera.transform.TransformVector(selFrustumCorners[i]);
+            //    Debug.DrawRay(camera.transform.position, worldSpaceCorner, Color.cyan);
+            //}
+            /* ----------------------------- */
         }
     }
 
@@ -100,9 +139,80 @@ public class Selection : MonoBehaviour {
     public bool IsWithinSelectionBounds(GameObject gameObject) {
         if (!leftClickHeld)
             return false;
-       
+
+        //Debug.Log("collider center world: " + gameObject.GetComponent<Collider>().bounds.center);        
         Bounds viewportBounds = Utils.GetViewportBounds(Camera.main, mousePositionInitial, Input.mousePosition);
+        //Debug.Log("box center: " + viewportBounds.center);
+        //Debug.Log("collider to viewport center: " + Camera.main.WorldToViewportPoint(gameObject.GetComponent<Collider>().bounds.center));
+
+        //Debug.Log(viewportBounds);
+
         return viewportBounds.Contains(Camera.main.WorldToViewportPoint(gameObject.transform.position));
+    }
+
+    public bool IsWithinSelectionBoundsVolume(GameObject gameObject) {
+        if (!leftClickHeld)
+            return false;
+
+        var rect = Utils.GetScreenRect(mousePositionInitial, Input.mousePosition);
+        //Bounds viewportBounds = Utils.GetViewportBounds(Camera.main, mousePositionInitial, Input.mousePosition);
+
+        //Debug.Log("rect: " + rect.y + " " + rect.yMax);
+        float x = rect.x / Screen.width;
+        float y = 1.0f - rect.y / Screen.height;
+        float xMax = rect.xMax / Screen.width;
+        float yMax = 1.0f - rect.yMax / Screen.height;
+
+        Rect selRect = new Rect(x, y, Mathf.Abs(xMax - x), yMax - y);
+        Camera camera = Camera.main;
+        //Vector3[] selFrustumCorners = new Vector3[4];
+        selFrustumCorners = new Vector3[4];
+        camera.CalculateFrustumCorners(selRect, camera.farClipPlane, Camera.MonoOrStereoscopicEye.Mono, selFrustumCorners);
+        for (int i = 0; i < 4; i++) {
+            // transform to world space
+            selFrustumCorners[i] = camera.transform.TransformVector(selFrustumCorners[i]);
+            //Debug.DrawRay(camera.transform.position, selFrustumCorners[i], Color.yellow);            
+        }
+
+        Plane[] selectionVolumePlanes = new Plane[5];
+
+        selectionVolumePlanes[0] = new Plane(selFrustumCorners[2], selFrustumCorners[1], selFrustumCorners[0]);
+        selectionVolumePlanes[1] = new Plane(camera.transform.position, selFrustumCorners[0], selFrustumCorners[1]);
+        selectionVolumePlanes[2] = new Plane(camera.transform.position, selFrustumCorners[1], selFrustumCorners[2]);
+        selectionVolumePlanes[3] = new Plane(camera.transform.position, selFrustumCorners[2], selFrustumCorners[3]);
+        selectionVolumePlanes[4] = new Plane(camera.transform.position, selFrustumCorners[3], selFrustumCorners[0]);
+
+        return GeometryUtility.TestPlanesAABB(selectionVolumePlanes, gameObject.GetComponent<Collider>().bounds);
+        // return viewportBounds.Contains(Camera.main.WorldToViewportPoint(gameObject.transform.position));
+    }
+
+    // Tries several points for the Collider -- only capsule for now TODO
+    public bool IsWithinSelectionBoundsPoints(GameObject gameObject) {
+        if (!leftClickHeld)
+            return false;
+
+        CapsuleCollider collider = gameObject.GetComponent<CapsuleCollider>();
+        Vector3 colliderCenter = collider.center + gameObject.transform.position;
+        float radius = collider.radius;
+        float height = collider.height;
+
+        Vector3 colliderTop = colliderCenter + new Vector3(0.0f, height / 2, 0.0f);
+        Vector3 colliderBot = colliderCenter - new Vector3(0.0f, height / 2, 0.0f);
+        Vector3 colliderRight = colliderCenter + new Vector3(radius, 0.0f, 0.0f);
+        Vector3 colliderLeft = colliderCenter - new Vector3(radius, 0.0f, 0.0f);
+        Vector3 colliderFront = colliderCenter + new Vector3(0.0f, 0.0f, radius);
+        Vector3 colliderBack = colliderCenter - new Vector3(0.0f, 0.0f, radius);
+
+        Bounds viewportBounds = Utils.GetViewportBounds(Camera.main, mousePositionInitial, Input.mousePosition);
+
+        return
+            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderCenter)) ||
+            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderTop)) ||
+            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderBot)) ||
+            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderRight)) ||
+            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderLeft)) ||
+            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderFront)) ||
+            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderBack));
     }
 
     void RemoveSelection(GameObject target) {
