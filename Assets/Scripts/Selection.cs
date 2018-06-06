@@ -11,6 +11,7 @@ public class Selection : MonoBehaviour {
     Mode selectionMode;
     Vector3 mousePositionInitial;
     Vector3[] selFrustumCorners;
+    public LayerMask movementLayerMask;
 
     // Use this for initialization
     void Start() {
@@ -18,6 +19,7 @@ public class Selection : MonoBehaviour {
         mousePositionInitial = new Vector3(0.0f, 0.0f, 0.0f);
         selectionMode = Mode.None;
         selectedUnits = new HashSet<GameObject>();
+        movementLayerMask = 1 << LayerMask.NameToLayer("Ground");
     }
 
     // Update is called once per frame
@@ -41,7 +43,9 @@ public class Selection : MonoBehaviour {
         // Right Click
         if (Input.GetMouseButtonDown(1)) {            
             RaycastHit hitInfo = new RaycastHit();
-            if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
+            
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
+            //if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
                 GameObject obj = hitInfo.transform.gameObject;
                 if (obj.layer == LayerMask.NameToLayer("Ground")) {
                     foreach (GameObject unit in selectedUnits) {
