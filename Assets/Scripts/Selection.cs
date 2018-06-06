@@ -49,7 +49,7 @@ public class Selection : MonoBehaviour {
                 GameObject obj = hitInfo.transform.gameObject;
                 if (obj.layer == LayerMask.NameToLayer("Ground")) {
                     foreach (GameObject unit in selectedUnits) {
-                        unit.GetComponent<Movement>().moveTo(hitInfo.point);
+                        unit.GetComponent<Movement>().CmdMoveTo(hitInfo.point);
                     }
                 }
             }
