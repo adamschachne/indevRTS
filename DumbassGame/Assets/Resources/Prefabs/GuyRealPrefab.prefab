@@ -22,11 +22,9 @@ GameObject:
   - component: {fileID: 136037057581526938}
   - component: {fileID: 114837626112923244}
   - component: {fileID: 114154092636441718}
-  - component: {fileID: 114032538737399478}
-  - component: {fileID: 114894940911287736}
   m_Layer: 0
   m_Name: GuyRealPrefab
-  m_TagString: Untagged
+  m_TagString: Unit
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -85,15 +83,15 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1117510192765624}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.48, y: 1.64, z: -6.99}
+  m_LocalRotation: {x: 0, y: 0.9810398, z: -0, w: -0.19380641}
+  m_LocalPosition: {x: -0.1, y: 1.64, z: -6.26}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4064119788477862}
   - {fileID: 4883229665904822}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 202.35, z: 0}
 --- !u!4 &4883229665904822
 Transform:
   m_ObjectHideFlags: 1
@@ -203,38 +201,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &114032538737399478
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1117510192765624}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 372142912, guid: dc443db3e92b4983b9738c1131f555cb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SceneId:
-    m_Value: 0
-  m_AssetId:
-    i0: 91
-    i1: 141
-    i2: 171
-    i3: 146
-    i4: 98
-    i5: 172
-    i6: 130
-    i7: 132
-    i8: 59
-    i9: 193
-    i10: 198
-    i11: 50
-    i12: 243
-    i13: 240
-    i14: 162
-    i15: 198
-  m_ServerOnly: 0
-  m_LocalPlayerAuthority: 1
 --- !u!114 &114154092636441718
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -262,27 +228,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   selectionCircle: {fileID: 0}
---- !u!114 &114894940911287736
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1117510192765624}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1768714887, guid: dc443db3e92b4983b9738c1131f555cb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_TransformSyncMode: 1
-  m_SendInterval: 0.1
-  m_SyncRotationAxis: 2
-  m_RotationSyncCompression: 0
-  m_SyncSpin: 0
-  m_MovementTheshold: 0.001
-  m_VelocityThreshold: 0.0001
-  m_SnapThreshold: 5
-  m_InterpolateRotation: 15
-  m_InterpolateMovement: 0.01
 --- !u!136 &136037057581526938
 CapsuleCollider:
   m_ObjectHideFlags: 1

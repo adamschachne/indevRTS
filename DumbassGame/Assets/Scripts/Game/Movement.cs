@@ -1,27 +1,28 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
 
-[NetworkSettings(channel = 0, sendInterval = 0.01f)]
-public class Movement : NetworkBehaviour {
+public class Movement : MonoBehaviour {
 
-    [SyncVar]
     public Vector3 targetPosition;
-    [SyncVar]
     public Vector3 targetDirection;
     public float moveSpeed = 3.0f;
     public float rotateSpeed = 0.08f;
 
+    private StateManager state;
+
 	// Use this for initialization
 	void Start () {
+        state = FindObjectOfType<StateManager>();
         targetPosition = transform.position;
     }
 
-    [Command]
-    public void CmdMoveTo(Vector3 targetPos) {
+    public void CmdMoveTo(Vector3 targetPos) {        
         targetPosition = new Vector3(targetPos.x, transform.position.y, targetPos.z);
         targetDirection = targetPosition - transform.position;
+
+        // send data across network TODO
+        // state.network.SendMsg();
     }
 	
 	// Update is called once per frame

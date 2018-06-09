@@ -7,13 +7,13 @@
 var UnityWebRtcNetwork =
 {
 	UnityWebRtcNetworkIsAvailable:function()
-    {
+	{
 		if(typeof CAPIWebRtcNetworkIsAvailable === 'function')
 		{
 			return CAPIWebRtcNetworkIsAvailable();
 		}
 		return false;
-    },
+	},
 	UnityWebRtcNetworkCreate:function(lConfiguration)
 	{
 		return CAPIWebRtcNetworkCreate(Pointer_stringify(lConfiguration));

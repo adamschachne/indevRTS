@@ -15,16 +15,24 @@ public class Selection : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        leftClickHeld = false;
         mousePositionInitial = new Vector3(0.0f, 0.0f, 0.0f);
+        movementLayerMask = 1 << LayerMask.NameToLayer("Ground");
+    }
+
+    private void OnEnable() {
+        leftClickHeld = false;
         selectionMode = Mode.None;
         selectedUnits = new HashSet<GameObject>();
-        movementLayerMask = 1 << LayerMask.NameToLayer("Ground");
+    }
+
+    private void OnDisable() {
+        leftClickHeld = false;
+        selectionMode = Mode.None;
+        selectedUnits.Clear();
     }
 
     // Update is called once per frame
     void Update() {
-
         // Left Shift
         if (Input.GetKey(KeyCode.LeftShift)) {
             selectionMode = Mode.Add;
@@ -46,7 +54,8 @@ public class Selection : MonoBehaviour {
             
             if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
             //if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
-                GameObject obj = hitInfo.transform.gameObject;
+                GameObject obj = hitInfo.transform.gameObject;               
+
                 if (obj.layer == LayerMask.NameToLayer("Ground")) {
                     foreach (GameObject unit in selectedUnits) {
                         unit.GetComponent<Movement>().CmdMoveTo(hitInfo.point);
@@ -109,49 +118,7 @@ public class Selection : MonoBehaviour {
             var rect = Utils.GetScreenRect(mousePositionInitial, Input.mousePosition);
             Utils.DrawScreenRect(rect, new Color(0.8f, 0.8f, 0.95f, 0.25f));
             Utils.DrawScreenRectBorder(rect, 2, new Color(0.8f, 0.8f, 0.95f));
-
-            /* ----------- DEBUG ----------- */
-            //Debug.Log("rect: " + rect.y + " " + rect.yMax);
-            //float x = rect.x / Screen.width;
-            //float y = 1.0f - rect.y / Screen.height;
-            //float xMax = rect.xMax / Screen.width;
-            //float yMax = 1.0f - rect.yMax / Screen.height;
-
-            //Rect selRect = new Rect(x, y, Mathf.Abs(xMax - x), yMax - y);
-            //Debug.Log("viewrect: " + selRect);
-
-            //var camera = GetComponent<Camera>();
-            //Vector3[] frustumCorners = new Vector3[4];
-            //Vector3[] selFrustumCorners = new Vector3[4];
-            //camera.CalculateFrustumCorners(new Rect(0, 0, 1, 1), camera.farClipPlane, Camera.MonoOrStereoscopicEye.Mono, frustumCorners);
-            //camera.CalculateFrustumCorners(selRect, camera.farClipPlane, Camera.MonoOrStereoscopicEye.Mono, selFrustumCorners);
-
-            //for (int i = 0; i < 4; i++) {
-            //    var worldSpaceCorner = camera.transform.TransformVector(frustumCorners[i]);
-            //    Debug.DrawRay(camera.transform.position, worldSpaceCorner, Color.yellow);
-            //}
-
-            //for (int i = 0; i < 4; i++) {
-            //    var worldSpaceCorner = camera.transform.TransformVector(selFrustumCorners[i]);
-            //    Debug.DrawRay(camera.transform.position, worldSpaceCorner, Color.cyan);
-            //}
-            /* ----------------------------- */
         }
-    }
-
-    // Currently only point based TODO
-    public bool IsWithinSelectionBounds(GameObject gameObject) {
-        if (!leftClickHeld)
-            return false;
-
-        //Debug.Log("collider center world: " + gameObject.GetComponent<Collider>().bounds.center);        
-        Bounds viewportBounds = Utils.GetViewportBounds(Camera.main, mousePositionInitial, Input.mousePosition);
-        //Debug.Log("box center: " + viewportBounds.center);
-        //Debug.Log("collider to viewport center: " + Camera.main.WorldToViewportPoint(gameObject.GetComponent<Collider>().bounds.center));
-
-        //Debug.Log(viewportBounds);
-
-        return viewportBounds.Contains(Camera.main.WorldToViewportPoint(gameObject.transform.position));
     }
 
     public bool IsWithinSelectionBoundsVolume(GameObject gameObject) {
@@ -258,6 +225,6 @@ public class Selection : MonoBehaviour {
 
         // add to selected list
         this.selectedUnits.Add(target);
-    }              
+    }
 }
 
