@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.29715562, g: 0.24628273, b: 0.23252651, a: 1}
+  m_IndirectSpecularColor: {r: 0.29680097, g: 0.24624714, b: 0.23170856, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -337,6 +337,7 @@ GameObject:
   - component: {fileID: 687881490}
   - component: {fileID: 687881489}
   - component: {fileID: 687881491}
+  - component: {fileID: 687881492}
   m_Layer: 0
   m_Name: StateManager
   m_TagString: Untagged
@@ -357,6 +358,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   network: {fileID: 0}
   gui: {fileID: 0}
+  input: {fileID: 0}
   guyPrefab: {fileID: 1117510192765624, guid: 5b8dab9262ac82843bc1c632f3f0a2c6, type: 2}
   selection: {fileID: 0}
   gameView: 0
@@ -421,6 +423,17 @@ MonoBehaviour:
   movementLayerMask:
     serializedVersion: 2
     m_Bits: 0
+--- !u!114 &687881492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 687881486}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f0e49f3ad73cbf40b4bfeb47faac380, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &742240610
 GameObject:
   m_ObjectHideFlags: 0

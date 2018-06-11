@@ -16,7 +16,7 @@ public class GuiManager : MonoBehaviour {
             throw new System.Exception("GUI Buttons not defined");
         }
 
-        state = FindObjectOfType<StateManager>();
+        state = GetComponent<StateManager>();
     }
 
     public void LobbyGUI() {
