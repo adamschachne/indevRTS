@@ -6,8 +6,8 @@ using UnityEngine;
 public class StateManager : MonoBehaviour 
 {
 
-	//This enum is used in the InputManager class to handle context switches
-	//keep new members ordered as array indices
+    //This enum is used in the InputManager class to handle context switches
+    //keep new members ordered as array indices
     public enum View {
         Lobby = 0,
         Game = 1
@@ -20,9 +20,9 @@ public class StateManager : MonoBehaviour
     [Header("GUI")]
     [ReadOnly]
     public GuiManager gui;
-	[Header("Input")]
-	[ReadOnly]
-	public InputManager input;
+    [Header("Input")]
+    [ReadOnly]
+    public InputManager input;
     [Header("Prefabs")]
     public GameObject guyPrefab;
     [ReadOnly]
@@ -32,19 +32,19 @@ public class StateManager : MonoBehaviour
     public View gameView;
     [ReadOnly]
     public bool isServer;
-	[ReadOnly]
+    [ReadOnly]
     public bool inGame;
-	private static StateManager s;
+    private static StateManager s;
     [HideInInspector]
     public static StateManager state {
-		get {
-			if (!s) {
-				throw new System.Exception ("StateManager hasn't been initialized yet");
-			} else {
-				return s;
-			}
-		}
-	}
+        get {
+            if (!s) {
+                throw new System.Exception ("StateManager hasn't been initialized yet");
+            } else {
+                return s;
+            }
+        }
+    }
 
 
     // Changed to awake for early init
@@ -67,10 +67,10 @@ public class StateManager : MonoBehaviour
             throw new System.Exception("No GUIManager defined");
         }
 
-		input = GetComponent<InputManager> ();
-		if (!input) {
-			throw new System.Exception ("No InputManager defined");
-		}
+        input = GetComponent<InputManager> ();
+        if (!input) {
+            throw new System.Exception ("No InputManager defined");
+        }
 
         selection = GetComponent<Selection>();
         if (!selection) {
