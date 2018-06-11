@@ -13,7 +13,7 @@ public class Movement : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        state = FindObjectOfType<StateManager>();
+        state = StateManager.state;
         targetPosition = transform.position;
     }
 

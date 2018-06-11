@@ -13,10 +13,18 @@ public class Selection : MonoBehaviour {
     Vector3[] selFrustumCorners;
     public LayerMask movementLayerMask;
 
+    private StateManager state;
+
+    
+
     // Use this for initialization
     void Start() {
+        state = StateManager.state;
         mousePositionInitial = new Vector3(0.0f, 0.0f, 0.0f);
         movementLayerMask = 1 << LayerMask.NameToLayer("Ground");
+        state.input.Subscribe(LeftClick, InputManager.InputType.LeftClickDown, StateManager.View.Game);
+        state.input.Subscribe(RightClick, InputManager.InputType.RightClickDown, StateManager.View.Game);
+        state.input.Subscribe(LeftClickUp, InputManager.InputType.LeftClickUp, StateManager.View.Game);
     }
 
     private void OnEnable() {
@@ -42,66 +50,6 @@ public class Selection : MonoBehaviour {
             selectionMode = Mode.None;
         }
 
-        // Left Click
-        if (Input.GetMouseButtonDown(0)) {
-            leftClickHeld = true;
-            mousePositionInitial = Input.mousePosition;
-        }
-
-        // Right Click
-        if (Input.GetMouseButtonDown(1)) {            
-            RaycastHit hitInfo = new RaycastHit();
-            
-            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
-            //if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
-                GameObject obj = hitInfo.transform.gameObject;               
-
-                if (obj.layer == LayerMask.NameToLayer("Ground")) {
-                    foreach (GameObject unit in selectedUnits) {
-                        unit.GetComponent<Movement>().CmdMoveTo(hitInfo.point);
-                    }
-                }
-            }
-        }
-
-        // Releases Left click
-        if (Input.GetMouseButtonUp(0)) {
-            // in place
-            if (Vector3.Distance(Input.mousePosition, mousePositionInitial) == 0.0f) {
-                RaycastHit hitInfo = new RaycastHit();
-                if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
-                    GameObject obj = hitInfo.transform.gameObject;
-                    //if (obj.tag == "Unit")
-                    if (obj.GetComponent<Selectable>() != null) {
-                        if (this.selectionMode == Mode.Remove) {
-                            RemoveSelection(obj);
-                        } else if (this.selectionMode == Mode.Add) {
-                            AddSelection(obj);
-                        } else if (this.selectionMode == Mode.None) {
-                            DeselectAll();
-                            AddSelection(obj);
-                        }
-                    }
-                }
-            }
-            // box selection 
-            else {
-                if (this.selectionMode == Mode.None) {
-                    this.DeselectAll();
-                }
-                foreach (Selectable selectableObject in FindObjectsOfType<Selectable>()) {
-                    GameObject obj = selectableObject.gameObject;
-                    if (this.IsWithinSelectionBoundsPoints(obj)) {
-                        if (this.selectionMode == Mode.Remove) {
-                            RemoveSelection(obj);
-                        } else {
-                            AddSelection(obj);
-                        }
-                    }
-                }
-            }
-            leftClickHeld = false;
-        }
         /* DEBUG */
         //if (selFrustumCorners == null) {
         //    return;
@@ -225,6 +173,66 @@ public class Selection : MonoBehaviour {
 
         // add to selected list
         this.selectedUnits.Add(target);
+    }
+
+    private void LeftClick() {
+        leftClickHeld = true;
+        mousePositionInitial = Input.mousePosition;
+    }
+
+    private void RightClick() {
+        RaycastHit hitInfo = new RaycastHit();
+            
+        if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
+        //if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
+            GameObject obj = hitInfo.transform.gameObject;               
+
+            if (obj.layer == LayerMask.NameToLayer("Ground")) {
+                foreach (GameObject unit in selectedUnits) {
+                    unit.GetComponent<Movement>().CmdMoveTo(hitInfo.point);
+                }
+            }
+        }
+    }
+
+    private void LeftClickUp() {
+        // in place
+        if (Vector3.Distance(Input.mousePosition, mousePositionInitial) == 0.0f) {
+            RaycastHit hitInfo = new RaycastHit();
+            Debug.Log("clicked in place");
+            if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
+                Debug.Log("Inside raycast, hitInfo: " + hitInfo.transform.gameObject);
+                GameObject obj = hitInfo.transform.gameObject;
+                //if (obj.tag == "Unit")
+                if (obj.GetComponent<Selectable>() != null) {
+                    if (this.selectionMode == Mode.Remove) {
+                        RemoveSelection(obj);
+                    } else if (this.selectionMode == Mode.Add) {
+                        AddSelection(obj);
+                    } else if (this.selectionMode == Mode.None) {
+                        DeselectAll();
+                        AddSelection(obj);
+                    }
+                }
+            }
+        }
+        // box selection 
+        else {
+            if (this.selectionMode == Mode.None) {
+                this.DeselectAll();
+            }
+            foreach (Selectable selectableObject in FindObjectsOfType<Selectable>()) {
+                GameObject obj = selectableObject.gameObject;
+                if (this.IsWithinSelectionBoundsPoints(obj)) {
+                    if (this.selectionMode == Mode.Remove) {
+                        RemoveSelection(obj);
+                    } else {
+                        AddSelection(obj);
+                    }
+                }
+            }
+        }
+        leftClickHeld = false;
     }
 }
 

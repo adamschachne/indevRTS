@@ -3,30 +3,52 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Maintains simple-to-access state variables
-public class StateManager : MonoBehaviour {
+public class StateManager : MonoBehaviour 
+{
+
+	//This enum is used in the InputManager class to handle context switches
+	//keep new members ordered as array indices
     public enum View {
         Lobby = 0,
         Game = 1
     }
+
+
     [Header("Network")]
     [ReadOnly]
     public NetworkManager network;
     [Header("GUI")]
     [ReadOnly]
     public GuiManager gui;
+	[Header("Input")]
+	[ReadOnly]
+	public InputManager input;
     [Header("Prefabs")]
     public GameObject guyPrefab;
     [ReadOnly]
     public Selection selection;
-    [Header("State")]
+    [Header("View")]
     [ReadOnly]
     public View gameView;
     [ReadOnly]
     public bool isServer;
+	[ReadOnly]
     public bool inGame;
+	private static StateManager s;
+    [HideInInspector]
+    public static StateManager state {
+		get {
+			if (!s) {
+				throw new System.Exception ("StateManager hasn't been initialized yet");
+			} else {
+				return s;
+			}
+		}
+	}
 
-    // Use this for initialization
-    void Start() {
+
+    // Changed to awake for early init
+    void Awake() {
         isServer = false;
         gameView = View.Lobby;
         inGame = false;
@@ -45,6 +67,11 @@ public class StateManager : MonoBehaviour {
             throw new System.Exception("No GUIManager defined");
         }
 
+		input = GetComponent<InputManager> ();
+		if (!input) {
+			throw new System.Exception ("No InputManager defined");
+		}
+
         selection = GetComponent<Selection>();
         if (!selection) {
             throw new System.Exception("No Selection defined");
@@ -54,6 +81,7 @@ public class StateManager : MonoBehaviour {
         //gameView = View.Lobby;
         selection.enabled = false;
         gui.LobbyGUI();
+        s = this;
     }
 
     // called from NetworkManager
@@ -62,8 +90,13 @@ public class StateManager : MonoBehaviour {
         if (isServer) {
             // initialize
         }
-        gameView = View.Game;        
-        Instantiate(guyPrefab);
+        gameView = View.Game;
+        GameObject guy = Instantiate(guyPrefab);
+        guy.transform.position += new Vector3(Random.Range(-3,3), 0, Random.Range(-3, 3));
+        guy = Instantiate(guyPrefab);
+        guy.transform.position += new Vector3(Random.Range(-3,3), 0, Random.Range(-3, 3));
+        guy = Instantiate(guyPrefab);
+        guy.transform.position += new Vector3(Random.Range(-3,3), 0, Random.Range(-3, 3));
         selection.enabled = true;
 
         // show game UI
