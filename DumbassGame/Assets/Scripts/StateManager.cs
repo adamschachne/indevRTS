@@ -10,7 +10,7 @@ public class StateManager : MonoBehaviour
     //keep new members ordered as array indices
     public enum View {
         Lobby = 0,
-        Game = 1
+        RTS = 1
     }
 
 
@@ -90,7 +90,7 @@ public class StateManager : MonoBehaviour
         if (isServer) {
             // initialize
         }
-        gameView = View.Game;
+        gameView = View.RTS;
         GameObject guy = Instantiate(guyPrefab);
         guy.transform.position += new Vector3(Random.Range(-3,3), 0, Random.Range(-3, 3));
         guy = Instantiate(guyPrefab);

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using GameMode;
 
 public class Selection : MonoBehaviour {
 
@@ -22,9 +23,9 @@ public class Selection : MonoBehaviour {
         state = StateManager.state;
         mousePositionInitial = new Vector3(0.0f, 0.0f, 0.0f);
         movementLayerMask = 1 << LayerMask.NameToLayer("Ground");
-        state.input.Subscribe(LeftClick, InputManager.InputType.LeftClickDown, StateManager.View.Game);
-        state.input.Subscribe(RightClick, InputManager.InputType.RightClickDown, StateManager.View.Game);
-        state.input.Subscribe(LeftClickUp, InputManager.InputType.LeftClickUp, StateManager.View.Game);
+        state.input.Subscribe(SelectDown, RTS.SELECT_DOWN);
+        state.input.Subscribe(SelectUp, RTS.SELECT_UP);
+        state.input.Subscribe(Move, RTS.MOVE);
     }
 
     private void OnEnable() {
@@ -175,12 +176,12 @@ public class Selection : MonoBehaviour {
         this.selectedUnits.Add(target);
     }
 
-    private void LeftClick() {
+    private void SelectDown() {
         leftClickHeld = true;
         mousePositionInitial = Input.mousePosition;
     }
 
-    private void RightClick() {
+    private void Move() {
         RaycastHit hitInfo = new RaycastHit();
             
         if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
@@ -195,13 +196,11 @@ public class Selection : MonoBehaviour {
         }
     }
 
-    private void LeftClickUp() {
+    private void SelectUp() {
         // in place
         if (Vector3.Distance(Input.mousePosition, mousePositionInitial) == 0.0f) {
             RaycastHit hitInfo = new RaycastHit();
-            Debug.Log("clicked in place");
             if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
-                Debug.Log("Inside raycast, hitInfo: " + hitInfo.transform.gameObject);
                 GameObject obj = hitInfo.transform.gameObject;
                 //if (obj.tag == "Unit")
                 if (obj.GetComponent<Selectable>() != null) {
