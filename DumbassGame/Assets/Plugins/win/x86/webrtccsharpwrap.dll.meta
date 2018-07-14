@@ -14,14 +14,14 @@ PluginImporter:
       enabled: 0
       settings:
         Exclude Android: 0
-        Exclude Editor: 0
+        Exclude Editor: 1
         Exclude Linux: 0
         Exclude Linux64: 0
         Exclude LinuxUniversal: 0
         Exclude OSXUniversal: 0
-        Exclude WebGL: 0
+        Exclude WebGL: 1
         Exclude Win: 0
-        Exclude Win64: 0
+        Exclude Win64: 1
   - first:
       Android: Android
     second:
@@ -31,12 +31,12 @@ PluginImporter:
   - first:
       Any: 
     second:
-      enabled: 1
+      enabled: 0
       settings: {}
   - first:
       Editor: Editor
     second:
-      enabled: 1
+      enabled: 0
       settings:
         CPU: x86
         DefaultValueInitialized: true
@@ -52,7 +52,7 @@ PluginImporter:
     second:
       enabled: 0
       settings:
-        CPU: AnyCPU
+        CPU: None
   - first:
       Standalone: Linux
     second:
@@ -86,13 +86,13 @@ PluginImporter:
   - first:
       Standalone: Win64
     second:
-      enabled: 1
+      enabled: 0
       settings:
-        CPU: AnyCPU
+        CPU: None
   - first:
       WebGL: WebGL
     second:
-      enabled: 1
+      enabled: 0
       settings: {}
   userData: 
   assetBundleName: 

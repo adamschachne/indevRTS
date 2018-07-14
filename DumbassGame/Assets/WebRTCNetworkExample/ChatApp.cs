@@ -35,9 +35,7 @@ public class ChatApp : MonoBehaviour
     /// <summary>
     /// This is a test server. Don't use in production! The server code is in a zip file in WebRtcNetwork
     /// </summary>
-    public string uSignalingUrl = "wss://because-why-not.com:12777/chatapp";
-
-
+    public string uSignalingUrl = "wss://because-why-not.com:12777/chatapp";   
 
     public string uIceServer = "stun:because-why-not.com:12779";
     public string uIceServerUser = "";

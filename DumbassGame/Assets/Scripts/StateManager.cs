@@ -13,7 +13,6 @@ public class StateManager : MonoBehaviour
         RTS = 1
     }
 
-
     [Header("Network")]
     [ReadOnly]
     public NetworkManager network;
@@ -25,6 +24,9 @@ public class StateManager : MonoBehaviour
     public InputManager input;
     [Header("Prefabs")]
     public GameObject guyPrefab;
+    public GameObject gameUnitsPrefab;
+    [ReadOnly]
+    public GameObject gameUnits;
     [ReadOnly]
     public Selection selection;
     [Header("View")]
@@ -34,24 +36,26 @@ public class StateManager : MonoBehaviour
     public bool isServer;
     [ReadOnly]
     public bool inGame;
+    [ReadOnly]
+    public Dictionary<short, int> unitCounts; // map network id to count
     private static StateManager s;
     [HideInInspector]
     public static StateManager state {
         get {
             if (!s) {
-                throw new System.Exception ("StateManager hasn't been initialized yet");
+                throw new System.Exception("StateManager hasn't been initialized yet");
             } else {
                 return s;
             }
         }
     }
 
-
     // Changed to awake for early init
     void Awake() {
         isServer = false;
         gameView = View.Lobby;
         inGame = false;
+        unitCounts = new Dictionary<short, int>();
 
         if (!guyPrefab) {
             throw new System.Exception("No Guy defined");
@@ -69,13 +73,13 @@ public class StateManager : MonoBehaviour
 
         input = GetComponent<InputManager> ();
         if (!input) {
-            throw new System.Exception ("No InputManager defined");
+            throw new System.Exception("No InputManager defined");
         }
 
         selection = GetComponent<Selection>();
         if (!selection) {
             throw new System.Exception("No Selection defined");
-        }
+        }        
 
         // Start in the Lobby
         //gameView = View.Lobby;
@@ -85,26 +89,72 @@ public class StateManager : MonoBehaviour
     }
 
     // called from NetworkManager
-    public void StartGame() {
+    public void StartGame() {        
+        CreateTopLevelGameUnits();
         inGame = true;
         if (isServer) {
-            // initialize
-        }
-        gameView = View.RTS;
-        GameObject guy = Instantiate(guyPrefab);
-        guy.transform.position += new Vector3(Random.Range(-3,3), 0, Random.Range(-3, 3));
-        guy = Instantiate(guyPrefab);
-        guy.transform.position += new Vector3(Random.Range(-3,3), 0, Random.Range(-3, 3));
-        guy = Instantiate(guyPrefab);
-        guy.transform.position += new Vector3(Random.Range(-3,3), 0, Random.Range(-3, 3));
-        selection.enabled = true;
+            // initialize idk TODO
+            GameObject guy = addUnit(0);
+            Vector3 pos = new Vector3(Random.Range(-3, 3), 0, Random.Range(-3, 3));
+            guy.transform.position += pos;
+        }       
 
+        gameView = View.RTS;        
+        selection.enabled = true;
         // show game UI
         gui.GameGUI();
     }
 
+    private GameObject GetNetUserGameUnits(short netID) {
+        string myGameUnitsName = "GU-" + netID;
+        foreach (var child in gameUnits.GetComponentsInChildren<Transform>()) {
+            if (child.name.Equals(myGameUnitsName)) {
+                return child.gameObject;
+            }
+        }
+        GameObject newGameUnits = Instantiate(gameUnitsPrefab, gameUnits.transform);
+        newGameUnits.name = myGameUnitsName;
+        return newGameUnits;
+    }
+
+    private int GetNextUnitCount(short netID) {
+        if (unitCounts.ContainsKey(netID) == false) {
+            unitCounts.Add(netID, 0);
+            return 0;
+        }
+        int count;
+        unitCounts.TryGetValue(netID, out count);
+        unitCounts.Remove(netID);
+        unitCounts.Add(netID, count + 1);
+        return count + 1;
+    }
+
+    public GameObject addUnit(short netID, string name = null) {
+        // get my game units
+        GameObject myUnits = GetNetUserGameUnits(netID);
+        // create a fucking guy in the gameUnits
+        GameObject unit = Instantiate(guyPrefab, myUnits.transform);
+        if (name == null) {
+            unit.name = GetNextUnitCount(netID).ToString();
+        } else {
+            unit.name = name;
+        }
+        return unit;
+    }
+
+    public void MoveCommand(short ownerID, string name, float x, float z) {
+        GameObject units = GetNetUserGameUnits(ownerID);
+        foreach (Transform child in units.transform) {
+            if (child.name.Equals(name)) {
+                child.GetComponent<Movement>().MoveTo(x, z);
+                return;
+            }
+        }
+    }
+
     // called from NetworkManager
     public void LeaveGame() {
+        unitCounts = new Dictionary<short, int>();
         if (!inGame) {
             return;            
         }
@@ -117,10 +167,13 @@ public class StateManager : MonoBehaviour
         gui.LobbyGUI();
     }
 
-    private void CleanObjects() {
-        GameObject[] units = GameObject.FindGameObjectsWithTag("Unit");
-        foreach (GameObject unit in units) {
-            Destroy(unit);
-        }
+    public void CreateTopLevelGameUnits() {
+        gameUnits = Instantiate(gameUnitsPrefab);
+        gameUnits.name = "GameUnits";
+    }
+
+    public void CleanObjects() {
+        Destroy(gameUnits);
+        gameUnits.transform.SetParent(null);
     }
 }

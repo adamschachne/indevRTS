@@ -1,33 +1,36 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GuiManager : MonoBehaviour {
 
-    public GameObject JoinButton;
-    public GameObject CreateButton;
-    public GameObject DisconnectButton;
-
-    private StateManager state;
+    public GameObject joinButton;
+    public GameObject createButton;
+    public GameObject disconnectButton;
+    public InputField inputField;
+    public Text roomID;
+    //private StateManager state;
 
     // Use this for initialization
     void Start() {
-        if (!(JoinButton && CreateButton && DisconnectButton)) {
-            throw new System.Exception("GUI Buttons not defined");
+        if (!(joinButton && createButton && disconnectButton && inputField && roomID)) {
+            throw new System.Exception("GUI elements not defined");
         }
-
-        state = GetComponent<StateManager>();
+        //state = GetComponent<StateManager>();
     }
 
     public void LobbyGUI() {
-        JoinButton.SetActive(true);
-        CreateButton.SetActive(true);
-        DisconnectButton.SetActive(false);
+        joinButton.SetActive(true);
+        inputField.ActivateInputField();
+        createButton.SetActive(true);
+        disconnectButton.SetActive(false);
     }
 
     public void GameGUI() {
-        JoinButton.SetActive(false);
-        CreateButton.SetActive(false);
-        DisconnectButton.SetActive(true);
+        joinButton.SetActive(false);
+        inputField.DeactivateInputField();
+        createButton.SetActive(false);
+        disconnectButton.SetActive(true);
     }
 }

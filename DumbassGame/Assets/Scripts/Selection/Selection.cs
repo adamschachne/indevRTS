@@ -196,6 +196,21 @@ public class Selection : MonoBehaviour {
         }
     }
 
+    private void Move(int ownerId, HashSet<int> units) {
+        RaycastHit hitInfo = new RaycastHit();
+
+        if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
+            //if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
+            GameObject obj = hitInfo.transform.gameObject;
+
+            if (obj.layer == LayerMask.NameToLayer("Ground")) {
+                foreach (GameObject unit in selectedUnits) {
+                    unit.GetComponent<Movement>().CmdMoveTo(hitInfo.point);
+                }
+            }
+        }
+    }
+
     private void SelectUp() {
         // in place
         if (Vector3.Distance(Input.mousePosition, mousePositionInitial) == 0.0f) {

@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Unit
   - Ground
+  - GameUnits
   layers:
   - Default
   - TransparentFX

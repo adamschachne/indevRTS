@@ -69,7 +69,7 @@ public class InputManager : MonoBehaviour
                 context[0].Execute();
         }
 
-        if(Input.GetMouseButtonUp(0)) {
+        if (Input.GetMouseButtonUp(0)) {
             if(1 < context.Length && context[1] != null)
                 context[1].Execute();
         }
