@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.29715562, g: 0.24628273, b: 0.23252651, a: 1}
+  m_IndirectSpecularColor: {r: 0.2970508, g: 0.24628142, b: 0.23225415, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -578,7 +578,7 @@ MonoBehaviour:
   network: {fileID: 0}
   gui: {fileID: 0}
   input: {fileID: 0}
-  guyPrefab: {fileID: 1117510192765624, guid: 5b8dab9262ac82843bc1c632f3f0a2c6, type: 2}
+  guyPrefab: {fileID: 1149543786897998, guid: 3a39b8ffb476d734492377a3cab99f01, type: 2}
   gameUnitsPrefab: {fileID: 1312743957959320, guid: 590352bc304f6ed43895118f86457a22,
     type: 2}
   gameUnits: {fileID: 0}
@@ -586,7 +586,6 @@ MonoBehaviour:
   gameView: 0
   isServer: 0
   inGame: 0
-  unitCount: 0
 --- !u!4 &687881488
 Transform:
   m_ObjectHideFlags: 0
