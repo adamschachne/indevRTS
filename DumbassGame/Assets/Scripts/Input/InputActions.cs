@@ -22,6 +22,11 @@ namespace InputActions {
 			alt = _alt;
 		}
 
+		public ModKey Copy()
+		{
+			return new ModKey(key, shift, ctrl, alt);
+		}
+
 		public override bool Equals(System.Object obj)
 		{
 			ModKey other = obj as ModKey;
@@ -80,6 +85,7 @@ namespace InputActions {
 
 		//this is the default key combo that this action will be set to.
 		public readonly ModKey defaultKey;
+		public ModKey currentKey;
 
 		protected readonly List<Action> subscribers;
 
@@ -90,10 +96,12 @@ namespace InputActions {
 			if(_defaultKey == null)
 			{
 				defaultKey = ModKey.none;
+				currentKey = ModKey.none;
 			}
 			else
 			{
 				defaultKey = _defaultKey;
+				currentKey = _defaultKey;
 			}
 
 			if(_group.Equals("NONE")) {
@@ -144,7 +152,7 @@ namespace InputActions {
 				groupNames.Add(a.group);
 			}
 
-			//TODO: If necessary, optimize this for many groups by using a hashset. currently pretty slow for many actions.
+			//TODO: If necessary, optimize this for many groups by using a hashset. currently pretty slow for large # of actions
 			foreach(String name in groupNames) {
 				List<ActionType> group = new List<ActionType>();
 				//iterates through the whole list to find string match (bad)
@@ -161,10 +169,20 @@ namespace InputActions {
 
 	}
 
+	public class Global : ActionType {
+		
+		public static readonly Global MENU = new Global(0, "Open/Close Menu", new ModKey(KeyCode.Escape));
+
+		public static ActionType[] actions = new ActionType[]{MENU};
+
+		public static readonly StateManager.View view = StateManager.View.Global;
+		private Global(int _index, string _name, ModKey _defaultKey = null, String _group = "NONE", InputType _inputType = InputType.Down) 
+			: base(_index, _name, _defaultKey, _group, _inputType){ }
+	}
+
 	public class Lobby : ActionType {
 		
 		//public static readonly Lobby NONE = new Lobby(0, "NONE");
-
 		public static ActionType[] actions = new ActionType[]{};
 		public static readonly StateManager.View view = StateManager.View.Lobby;
 		private Lobby(int _index, string _name, ModKey _defaultKey = null, String _group = "NONE", InputType _inputType = InputType.Down) 
@@ -176,8 +194,7 @@ namespace InputActions {
 
 		public static readonly RTS SELECT_DOWN = new RTS(0, "SELECT_DOWN", new ModKey(KeyCode.Mouse0), "Select", InputType.Down);
 		public static readonly RTS SELECT_UP = new RTS(1, "SELECT_UP", new ModKey(KeyCode.Mouse0), "Select",  InputType.Up);
-		public static readonly RTS MOVE = new RTS(2, "MOVE", new ModKey(KeyCode.Mouse1));
-
+		public static readonly RTS MOVE = new RTS(2, "Move", new ModKey(KeyCode.Mouse1));
 		//this variable MUST be named actions
 		//put the const values into the array in the same order you initalized them
 		public static ActionType[] actions = new ActionType[]{SELECT_DOWN, SELECT_UP, MOVE};

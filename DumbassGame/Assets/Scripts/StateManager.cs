@@ -9,8 +9,10 @@ public class StateManager : MonoBehaviour
     //This enum is used in the InputManager class to handle context switches
     //keep new members ordered as array indices
     public enum View {
-        Lobby = 0,
-        RTS = 1
+        Global = 0,
+        Lobby = 1,
+        RTS = 2, 
+
     }
 
     [Header("Network")]
@@ -49,6 +51,7 @@ public class StateManager : MonoBehaviour
             }
         }
     }
+    private View lastViewFromMenu;
 
     // Changed to awake for early init
     void Awake() {
@@ -98,6 +101,9 @@ public class StateManager : MonoBehaviour
             Vector3 pos = new Vector3(Random.Range(-3, 3), 0, Random.Range(-3, 3));
             guy.transform.position += pos;
         }       
+
+        if(gameView == View.Global)
+            gui.Menu();
 
         gameView = View.RTS;        
         selection.enabled = true;
@@ -158,6 +164,10 @@ public class StateManager : MonoBehaviour
         if (!inGame) {
             return;            
         }
+        if(gameView == View.Global)
+        {
+            gui.Menu();
+        }
         gameView = View.Lobby;
         isServer = false;        
         inGame = false;
@@ -175,5 +185,19 @@ public class StateManager : MonoBehaviour
     public void CleanObjects() {
         Destroy(gameUnits);
         gameUnits.transform.SetParent(null);
+    }
+
+    public void OpenMenu(bool open)
+    {
+        if(open)
+        {
+            lastViewFromMenu = gameView;
+            gameView = View.Global;
+        }
+        else
+        {
+            if(gameView == View.Global)
+                gameView = lastViewFromMenu;
+        }
     }
 }
