@@ -177,16 +177,6 @@ public class NetworkManager : MonoBehaviour {
         }
     }
 
-    private void HandleAddUnit(AddUnit au) {
-        Debug.Log("HANDLING ADD UNIT");
-        // Client Only
-        if (state.isServer == true) {
-            return;
-        }
-        GameObject unit = state.addUnit(networkID, au.unit.id);
-        unit.transform.SetPositionAndRotation(new Vector3(au.unit.x, unit.transform.position.y, au.unit.z), unit.transform.rotation);
-    }
-
     private void HandleRequestUnit(RequestUnit ru) {
         Debug.Log("HANDLING REQUEST UNIT");
         // Server Only
@@ -203,7 +193,7 @@ public class NetworkManager : MonoBehaviour {
         unit.transform.position += deltaPos;
 
         AddUnit addUnit = new AddUnit();
-        addUnit.ownerID = networkID;
+        addUnit.ownerID = netID;
         addUnit.unit = new NetworkUnit();
         addUnit.unit.id = unit.name;
         addUnit.unit.x = unit.transform.position.x;
@@ -234,9 +224,8 @@ public class NetworkManager : MonoBehaviour {
                     HandleSync(su);
                     break;
                 case NetTypes.ADD_UNIT:
-                    Debug.Log("unit added");
                     AddUnit au = JsonUtility.FromJson<AddUnit>(netjson.json);
-                    HandleAddUnit(au);
+                    AddUnit.action(au.ownerID, au.unit);
                     break;
                 case NetTypes.REQUEST_UNIT:
                     Debug.Log("requested add unit from: " + requestID);

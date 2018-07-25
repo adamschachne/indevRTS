@@ -41,6 +41,17 @@ public class SyncUnits {
 public class AddUnit {
     public short ownerID; // the connection that added a unit
     public NetworkUnit unit; // the unit added
+
+    [NonSerialized]
+    public static Action<short, NetworkUnit> action = (short netId, NetworkUnit netunit) => {
+        Debug.Log("HANDLING ADD UNIT");
+        // Client Only
+        if (StateManager.state.isServer == true) {
+            return;
+        }
+        GameObject unit = StateManager.state.addUnit(netId, netunit.id);
+        unit.transform.SetPositionAndRotation(new Vector3(netunit.x, unit.transform.position.y, netunit.z), unit.transform.rotation);
+    };
 }
 
 [Serializable]
