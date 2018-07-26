@@ -195,9 +195,11 @@ namespace InputActions {
 		public static readonly RTS SELECT_DOWN = new RTS(0, "SELECT_DOWN", new ModKey(KeyCode.Mouse0), "Select", InputType.Down);
 		public static readonly RTS SELECT_UP = new RTS(1, "SELECT_UP", new ModKey(KeyCode.Mouse0), "Select",  InputType.Up);
 		public static readonly RTS MOVE = new RTS(2, "Move", new ModKey(KeyCode.Mouse1));
+		public static readonly RTS STOP = new RTS(3, "Stop", new ModKey(KeyCode.S));
+		public static readonly RTS SPAWN_SHOOTGUY = new RTS(4, "Spawn Guy", new ModKey(KeyCode.Alpha1));
 		//this variable MUST be named actions
 		//put the const values into the array in the same order you initalized them
-		public static ActionType[] actions = new ActionType[]{SELECT_DOWN, SELECT_UP, MOVE};
+		public static ActionType[] actions = new ActionType[]{SELECT_DOWN, SELECT_UP, MOVE, STOP, SPAWN_SHOOTGUY};
 		//this variable MUST be named view
 		public static readonly StateManager.View view = StateManager.View.RTS;
 

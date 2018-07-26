@@ -91,15 +91,19 @@ public class StateManager : MonoBehaviour
         s = this;
     }
 
+    void Start()
+    {
+        input.Subscribe(SpawnShootGuy, InputActions.RTS.SPAWN_SHOOTGUY);
+    }
+
     // called from NetworkManager
     public void StartGame() {        
         CreateTopLevelGameUnits();
         inGame = true;
         if (isServer) {
             // initialize idk TODO
-            GameObject guy = addUnit(0);
-            Vector3 pos = new Vector3(Random.Range(-3, 3), 0, Random.Range(-3, 3));
-            guy.transform.position += pos;
+            SpawnShootGuy();
+
         }       
 
         if(gameView == View.Global)
@@ -109,6 +113,12 @@ public class StateManager : MonoBehaviour
         selection.enabled = true;
         // show game UI
         gui.GameGUI();
+    }
+
+    private void SpawnShootGuy() {
+        GameObject guy = addUnit(0);
+        Vector3 pos = new Vector3(Random.Range(-3, 3), 0, Random.Range(-3, 3));
+        guy.transform.position += pos;
     }
 
     private GameObject GetNetUserGameUnits(short netID) {
