@@ -91,7 +91,6 @@ public class InputManager : MonoBehaviour
     }
 
     public void Subscribe(Action f, ActionType a) {
-        if(ViewOfAction(a) == StateManager.View.Global)
         contexts[(int)ViewOfAction(a)][(int)a].AddSubscriber(f);
     }
 
@@ -142,10 +141,12 @@ public class InputManager : MonoBehaviour
     }
 
     private void bind(StateManager.View v, ModKey newKey, List<ActionType> group) {
+        
         if(keyMap[(int)v].ContainsKey(group[0].currentKey))
         {
             keyMap[(int)v].Remove(group[0].currentKey);
         }
+        
 
         if(keyMap[(int)v].ContainsKey(newKey)) {
             keyMap[(int)v][newKey][0].currentKey = ModKey.none;
@@ -214,14 +215,9 @@ public class InputManager : MonoBehaviour
             return;
         }
         
-        
         ActionType a;
         if(Input.GetKeyDown(ci.key)) {
             a = getActionFromInput(actionGroup, ActionType.InputType.Down);
-            if(v == StateManager.View.Global)
-            {
-                Debug.Log("Executing " + a);
-            }
             if(a != null)
                 a.Execute();
         }
