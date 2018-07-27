@@ -8,8 +8,12 @@ public class Movement : MonoBehaviour {
     public Vector3 targetDirection;
     public float moveSpeed = 3.0f;
     public float rotateSpeed = 0.08f;
+    public bool moving = false;
 
     private StateManager state;
+
+    private Animator anim;
+    private int animTimer = 0;
 
     // Use this for initialization
     void Start () {
@@ -21,6 +25,7 @@ public class Movement : MonoBehaviour {
             throw new System.Exception("no state found");
         }
         targetPosition = transform.position;
+        anim = GetComponentInChildren<Animator>();
     }
 
     // Called by user
@@ -38,12 +43,38 @@ public class Movement : MonoBehaviour {
         targetDirection = targetPosition - transform.position;
     }
 
+    //temporary function dont keep this here please god
+    public void Attack()
+    {
+        anim.SetBool("Attack", true);
+        animTimer = 5;
+    }
+
     // Update is called once per frame
     void Update () {
         // check if distance to target is greater than distance threshold
         if (Vector3.Distance(transform.position, targetPosition) > 0.1f) {
             float step = moveSpeed * Time.deltaTime;
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
+            moving = true;
+        }
+        else
+        {
+            moving = false;
+        }
+
+        anim.SetBool("Moving", moving);
+        if(animTimer <= 0)
+        {
+            if(anim.GetBool("Attack"))
+            {
+                anim.SetBool("Attack", false);
+                animTimer = 0;
+            }
+        }
+        else
+        {
+            animTimer--;
         }
 
         Vector3 newDir = Vector3.RotateTowards(transform.forward, targetDirection, rotateSpeed, 0.0f);

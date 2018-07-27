@@ -27,6 +27,7 @@ public class Selection : MonoBehaviour {
         state.input.Subscribe(SelectUp, RTS.SELECT_UP);
         state.input.Subscribe(Move, RTS.MOVE);
         state.input.Subscribe(Stop, RTS.STOP);
+        state.input.Subscribe(Attack, RTS.ATTACK);
     }
 
     private void OnEnable() {
@@ -194,6 +195,12 @@ public class Selection : MonoBehaviour {
                     unit.GetComponent<Movement>().CmdMoveTo(hitInfo.point);
                 }
             }
+        }
+    }
+
+    private void Attack() {
+        foreach (GameObject unit in selectedUnits) {
+            unit.GetComponent<Movement>().Attack();
         }
     }
 
