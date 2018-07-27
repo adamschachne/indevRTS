@@ -102,7 +102,9 @@ public class StateManager : MonoBehaviour
         inGame = true;
         if (isServer) {
             // initialize idk TODO
-            SpawnShootGuy();
+            GameObject guy = addUnit(0);
+            Vector3 pos = new Vector3(Random.Range(-3, 3), 0, Random.Range(-3, 3));
+            guy.transform.position += pos;
 
         }       
 
@@ -116,9 +118,7 @@ public class StateManager : MonoBehaviour
     }
 
     private void SpawnShootGuy() {
-        GameObject guy = addUnit(0);
-        Vector3 pos = new Vector3(Random.Range(-3, 3), 0, Random.Range(-3, 3));
-        guy.transform.position += pos;
+        network.requestNewUnit();
     }
 
     private GameObject GetNetUserGameUnits(short netID) {

@@ -248,6 +248,25 @@ public class NetworkManager : MonoBehaviour {
         buffer.Dispose();
     }
 
+    public void requestNewUnit()
+    {
+        if(state.isServer)
+        {
+            RequestUnit req = new RequestUnit();
+            req.ownerID = networkID;
+            HandleRequestUnit(req);
+        }
+        else
+        {
+            RequestUnit req = new RequestUnit();
+            req.ownerID = networkID;
+            NetworkJSON netjson = new NetworkJSON();
+            netjson.json = JsonUtility.ToJson(req);
+            netjson.type = NetTypes.REQUEST_UNIT;
+            SendString(JsonUtility.ToJson(netjson), true);
+        }
+    }
+
     private void FixedUpdate() {
         //check if the network was created
         if (mNetwork != null) {
