@@ -101,8 +101,6 @@ public class InputManager : MonoBehaviour
     public void defaultKeys(StateManager.View v) {
         keyMap[(int)v].Clear();
         foreach(List<ActionType> singleGroup in groups[(int)v]) {
-            if(v == StateManager.View.Global)
-                Debug.Log("Global Groups: " + singleGroup[0] + " bound to " + singleGroup[0].defaultKey.ToString());
             bind(v, singleGroup[0].defaultKey, singleGroup);
         }
     }
@@ -168,6 +166,9 @@ public class InputManager : MonoBehaviour
 
     void Update() {
         //update the state of our current input's modifiers.
+        if(ci == null)
+            return;
+        
         ci.shift = (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
         ci.ctrl = (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl));
         ci.alt = (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt));

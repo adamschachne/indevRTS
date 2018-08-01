@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Movement : MonoBehaviour {
+public class UnitController : MonoBehaviour {
 
     public Vector3 targetPosition;
     public Vector3 targetDirection;
@@ -12,8 +12,8 @@ public class Movement : MonoBehaviour {
 
     private StateManager state;
 
-    private Animator anim;
-    private int animTimer = 0;
+    private AnimationController anim;
+    private ActionController actions;
 
     // Use this for initialization
     void Start () {
@@ -25,29 +25,41 @@ public class Movement : MonoBehaviour {
             throw new System.Exception("no state found");
         }
         targetPosition = transform.position;
-        anim = GetComponentInChildren<Animator>();
+        anim = GetComponent<AnimationController>();
+        actions = GetComponent<ActionController>();
     }
 
     // Called by user
     public void CmdMoveTo(Vector3 targetPos) {        
         targetPosition = new Vector3(targetPos.x, transform.position.y, targetPos.z);
-        targetDirection = targetPosition - transform.position;
+        RotateTowards(targetPos.x, targetPos.z);
 
         // send data across network TODO
         state.network.SendMove(this.name, targetPos.x, targetPos.z);
     }
 
+    public void Stop()
+    {
+        CmdMoveTo(this.transform.position);
+        if(actions.CancelAttack())
+            anim.SetIdle();
+    }
+
     // Called by other users
     public void MoveTo(float x, float z) {
         targetPosition = new Vector3(x, transform.position.y, z);
-        targetDirection = targetPosition - transform.position;
+        RotateTowards(x, z);
     }
 
-    //temporary function dont keep this here please god
-    public void Attack()
+    public void RotateTowards(float x, float z) {
+        targetDirection = new Vector3(x, transform.position.y, z) - transform.position;
+    }
+
+    public void CmdAttack(Vector3 targetPos)
     {
-        anim.SetBool("Attack", true);
-        animTimer = 5;
+        RotateTowards(targetPos.x, targetPos.z);
+        anim.SetAttack();
+        actions.Attack(targetPos, targetDirection);
     }
 
     // Update is called once per frame
@@ -63,19 +75,7 @@ public class Movement : MonoBehaviour {
             moving = false;
         }
 
-        anim.SetBool("Moving", moving);
-        if(animTimer <= 0)
-        {
-            if(anim.GetBool("Attack"))
-            {
-                anim.SetBool("Attack", false);
-                animTimer = 0;
-            }
-        }
-        else
-        {
-            animTimer--;
-        }
+        anim.SetMove(moving);
 
         Vector3 newDir = Vector3.RotateTowards(transform.forward, targetDirection, rotateSpeed, 0.0f);
         transform.rotation = Quaternion.LookRotation(newDir);

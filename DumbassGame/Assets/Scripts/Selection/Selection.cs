@@ -8,6 +8,7 @@ public class Selection : MonoBehaviour {
     public GameObject SelectionCircle;
     HashSet<GameObject> selectedUnits;
     bool leftClickHeld;
+    bool attacking;
     enum Mode { None, Remove, Add };
     Mode selectionMode;
     Vector3 mousePositionInitial;
@@ -27,19 +28,22 @@ public class Selection : MonoBehaviour {
         state.input.Subscribe(SelectUp, RTS.SELECT_UP);
         state.input.Subscribe(Move, RTS.MOVE);
         state.input.Subscribe(Stop, RTS.STOP);
-        state.input.Subscribe(Attack, RTS.ATTACK);
+        state.input.Subscribe(ToggleAttackOn, RTS.ATTACK);
+        attacking = false;
     }
 
     private void OnEnable() {
         leftClickHeld = false;
         selectionMode = Mode.None;
         selectedUnits = new HashSet<GameObject>();
+        attacking = false;
     }
 
     private void OnDisable() {
         leftClickHeld = false;
         selectionMode = Mode.None;
         selectedUnits.Clear();
+        attacking = false;
     }
 
     // Update is called once per frame
@@ -179,34 +183,57 @@ public class Selection : MonoBehaviour {
     }
 
     private void SelectDown() {
-        leftClickHeld = true;
-        mousePositionInitial = Input.mousePosition;
+        if(!attacking) {
+            leftClickHeld = true;
+            mousePositionInitial = Input.mousePosition;
+        }
+        
     }
 
     private void Move() {
-        RaycastHit hitInfo = new RaycastHit();
-            
-        if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
-        //if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
-            GameObject obj = hitInfo.transform.gameObject;               
+        if(attacking) {
+            attacking = false;
+        } else {
+            RaycastHit hitInfo = new RaycastHit();
+                
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
+            //if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
+                GameObject obj = hitInfo.transform.gameObject;               
 
-            if (obj.layer == LayerMask.NameToLayer("Ground")) {
-                foreach (GameObject unit in selectedUnits) {
-                    unit.GetComponent<Movement>().CmdMoveTo(hitInfo.point);
+                if (obj.layer == LayerMask.NameToLayer("Ground")) {
+                    foreach (GameObject unit in selectedUnits) {
+                        unit.GetComponent<UnitController>().CmdMoveTo(hitInfo.point);
+                    }
                 }
             }
         }
     }
 
+    private void ToggleAttackOn() {
+        if(selectedUnits.Count > 0)
+            attacking = true;
+    }
+
     private void Attack() {
-        foreach (GameObject unit in selectedUnits) {
-            unit.GetComponent<Movement>().Attack();
-        }
+
+        RaycastHit hitInfo = new RaycastHit();
+                
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
+            //if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
+                GameObject obj = hitInfo.transform.gameObject;               
+
+                if (obj.layer == LayerMask.NameToLayer("Ground")) {
+                    foreach (GameObject unit in selectedUnits) {
+                        unit.GetComponent<UnitController>().CmdAttack(hitInfo.point);
+                    }
+                }
+            }
+
     }
 
     private void Stop() {
         foreach(GameObject unit in selectedUnits) {
-            unit.GetComponent<Movement>().CmdMoveTo(unit.transform.position);
+            unit.GetComponent<UnitController>().Stop();
         }
     }
 
@@ -214,20 +241,25 @@ public class Selection : MonoBehaviour {
         RaycastHit hitInfo = new RaycastHit();
 
         if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
-            //if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
             GameObject obj = hitInfo.transform.gameObject;
 
             if (obj.layer == LayerMask.NameToLayer("Ground")) {
                 foreach (GameObject unit in selectedUnits) {
-                    unit.GetComponent<Movement>().CmdMoveTo(hitInfo.point);
+                    unit.GetComponent<UnitController>().CmdMoveTo(hitInfo.point);
                 }
             }
         }
     }
 
     private void SelectUp() {
+        if(attacking)
+        {
+            attacking = false;
+            Stop();
+            Attack();
+        }
         // in place
-        if (Vector3.Distance(Input.mousePosition, mousePositionInitial) == 0.0f) {
+        else if (Vector3.Distance(Input.mousePosition, mousePositionInitial) == 0.0f) {
             RaycastHit hitInfo = new RaycastHit();
             if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
                 GameObject obj = hitInfo.transform.gameObject;

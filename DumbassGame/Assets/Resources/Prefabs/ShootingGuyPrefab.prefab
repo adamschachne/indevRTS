@@ -112,6 +112,8 @@ GameObject:
   - component: {fileID: 136423377140206328}
   - component: {fileID: 114688813176551388}
   - component: {fileID: 114189060562313822}
+  - component: {fileID: 114274970970991136}
+  - component: {fileID: 114077157482825348}
   m_Layer: 0
   m_Name: ShootingGuyPrefab
   m_TagString: Unit
@@ -961,6 +963,21 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &114077157482825348
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1149543786897998}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4cc185a3cf520e46b2d4c0207dab39b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hitReticle: {fileID: 1179558671821602, guid: 2736803f2cd56864f94e7eed6ca06d42, type: 2}
+  attackWidth: 1
+  attackHeight: 10
+  attackDelayInSeconds: 0.8
 --- !u!114 &114189060562313822
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -977,6 +994,17 @@ MonoBehaviour:
   moveSpeed: 3
   rotateSpeed: 0.08
   moving: 0
+--- !u!114 &114274970970991136
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1149543786897998}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e237252df9c7d2e4a8790509504b4947, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114688813176551388
 MonoBehaviour:
   m_ObjectHideFlags: 1

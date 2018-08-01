@@ -162,7 +162,7 @@ public class StateManager : MonoBehaviour
         GameObject units = GetNetUserGameUnits(ownerID);
         foreach (Transform child in units.transform) {
             if (child.name.Equals(name)) {
-                child.GetComponent<Movement>().MoveTo(x, z);
+                child.GetComponent<UnitController>().MoveTo(x, z);
                 return;
             }
         }
