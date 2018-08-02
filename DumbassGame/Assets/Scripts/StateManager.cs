@@ -168,6 +168,28 @@ public class StateManager : MonoBehaviour
         }
     }
 
+    public void StopCommand(short ownerID, string name)
+    {
+        GameObject units = GetNetUserGameUnits(ownerID);
+        foreach(Transform child in units.transform) {
+            if(child.name.Equals(name)) {
+                child.GetComponent<UnitController>().Stop();
+                return;
+            }
+        }
+    }
+
+    public void AttackCommand(short ownerID, string name, float x, float z)
+    {
+        GameObject units = GetNetUserGameUnits(ownerID);
+        foreach(Transform child in units.transform) {
+            if(child.name.Equals(name)) {
+                child.GetComponent<UnitController>().Attack(x, z);
+                return;
+            }
+        }
+    }
+
     // called from NetworkManager
     public void LeaveGame() {
         unitCounts = new Dictionary<short, int>();

@@ -233,7 +233,7 @@ public class Selection : MonoBehaviour {
 
     private void Stop() {
         foreach(GameObject unit in selectedUnits) {
-            unit.GetComponent<UnitController>().Stop();
+            unit.GetComponent<UnitController>().CmdStop();
         }
     }
 

@@ -8,6 +8,8 @@ public class NetTypes {
     public const string ADD_UNIT = "ADDUNIT"; // sent when a new unit was added to the game
     public const string REQUEST_UNIT = "REQUESTUNIT"; // sent to the server asking for a new unit
     public const string MOVE_UNIT = "MOVE"; // command move a unit
+    public const string STOP_UNIT = "STOP"; // command a unit to stop
+    public const string ATTACK_UNIT = "ATTACK"; //command a unit to attack
 }
 
 [Serializable]
@@ -65,4 +67,18 @@ public class Move {
     public float x;
     public float z;
     public short ownerID; // network id of the owner
+}
+
+[Serializable]
+public class Stop {
+    public string id;
+    public short ownerID;
+}
+
+[Serializable]
+public class Attack {
+    public string id;
+    public short ownerID;
+    public float x;
+    public float z;
 }

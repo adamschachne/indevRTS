@@ -31,24 +31,27 @@ public class UnitController : MonoBehaviour {
 
     // Called by user
     public void CmdMoveTo(Vector3 targetPos) {        
-        targetPosition = new Vector3(targetPos.x, transform.position.y, targetPos.z);
-        RotateTowards(targetPos.x, targetPos.z);
+        MoveTo(targetPos.x, targetPos.z);
 
         // send data across network TODO
         state.network.SendMove(this.name, targetPos.x, targetPos.z);
     }
-
-    public void Stop()
-    {
-        CmdMoveTo(this.transform.position);
-        if(actions.CancelAttack())
-            anim.SetIdle();
-    }
-
     // Called by other users
     public void MoveTo(float x, float z) {
         targetPosition = new Vector3(x, transform.position.y, z);
         RotateTowards(x, z);
+    }
+
+    public void CmdStop()
+    {
+        Stop();
+        state.network.SendStop(this.name);
+    }
+    public void Stop()
+    {
+        MoveTo(this.transform.position.x, this.transform.position.z);
+        if(actions.CancelAttack())
+            anim.SetIdle();
     }
 
     public void RotateTowards(float x, float z) {
@@ -57,9 +60,15 @@ public class UnitController : MonoBehaviour {
 
     public void CmdAttack(Vector3 targetPos)
     {
-        RotateTowards(targetPos.x, targetPos.z);
+        Attack(targetPos.x, targetPos.z);
+        state.network.SendAttack(this.name, targetPos.x, targetPos.z);
+    }
+
+    public void Attack(float x, float z)
+    {
+        RotateTowards(x, z);
         anim.SetAttack();
-        actions.Attack(targetPos, targetDirection);
+        actions.Attack(new Vector3(x, transform.position.y, z), targetDirection);
     }
 
     // Update is called once per frame

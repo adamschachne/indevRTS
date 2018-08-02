@@ -159,6 +159,36 @@ public class NetworkManager : MonoBehaviour {
         SendString(JsonUtility.ToJson(netjson), true);
     }
 
+    public void SendStop(string name) {
+        Stop stop = new Stop {
+            id = name,
+            ownerID = networkID
+        };
+
+        NetworkJSON netjson = new NetworkJSON {
+            json = JsonUtility.ToJson(stop),
+            type = NetTypes.STOP_UNIT
+        };
+
+        SendString(JsonUtility.ToJson(netjson), true);
+    }
+
+    public void SendAttack(string name, float x, float z) {
+        Attack attack = new Attack {
+            id = name,
+            ownerID = networkID,
+            x = x,
+            z = z
+        };
+
+        NetworkJSON netjson = new NetworkJSON {
+            json = JsonUtility.ToJson(attack),
+            type = NetTypes.ATTACK_UNIT
+        };
+
+        SendString(JsonUtility.ToJson(netjson), true);
+    }
+
     private void HandleSync(SyncUnits su) {
         Debug.Log("HANDLING SYNC");
         // Client Only
@@ -212,6 +242,14 @@ public class NetworkManager : MonoBehaviour {
         state.MoveCommand(move.ownerID, move.id, move.x, move.z);
     }
 
+    private void HandleStopCommand(Stop stop) {
+        state.StopCommand(stop.ownerID, stop.id);
+    }
+
+    private void HandleAttackCommand(Attack attack) {
+        state.AttackCommand(attack.ownerID, attack.id, attack.x, attack.z);
+    }
+
     private void HandleIncommingMessage(ref NetworkEvent evt) {
         short requestID = evt.ConnectionId.id;
         MessageDataBuffer buffer = (MessageDataBuffer)evt.MessageData;
@@ -236,6 +274,14 @@ public class NetworkManager : MonoBehaviour {
                     Debug.Log("requested move unit from: " + requestID);
                     Move move = JsonUtility.FromJson<Move>(netjson.json);
                     HandleMoveCommand(move);
+                    break;
+                case NetTypes.STOP_UNIT:
+                    Stop stop = JsonUtility.FromJson<Stop>(netjson.json);
+                    HandleStopCommand(stop);
+                    break;
+                case NetTypes.ATTACK_UNIT:
+                    Attack attack = JsonUtility.FromJson<Attack>(netjson.json);
+                    HandleAttackCommand(attack);
                     break;
                 default:
                     Debug.Log("UNKNOWN TYPE: " + netjson.type);
