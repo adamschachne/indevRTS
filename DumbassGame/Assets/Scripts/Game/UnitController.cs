@@ -8,7 +8,8 @@ public class UnitController : MonoBehaviour {
     public Vector3 targetDirection;
     public float moveSpeed = 3.0f;
     public float rotateSpeed = 0.08f;
-    public bool moving = false;
+    public int health = 20;
+    private bool moving = false;
 
     private StateManager state;
 
@@ -38,6 +39,11 @@ public class UnitController : MonoBehaviour {
     }
     // Called by other users
     public void MoveTo(float x, float z) {
+        if(actions.CancelAttack())
+        {
+            anim.SetIdle();
+            anim.ResetAttack();
+        }
         targetPosition = new Vector3(x, transform.position.y, z);
         RotateTowards(x, z);
     }
@@ -51,7 +57,17 @@ public class UnitController : MonoBehaviour {
     {
         MoveTo(this.transform.position.x, this.transform.position.z);
         if(actions.CancelAttack())
+        {
             anim.SetIdle();
+            anim.ResetAttack();
+        }
+    }
+
+    public void TakeDamage(int damage) {
+        health -= damage;
+        if(health <= 0) {
+            Destroy(this.gameObject);
+        }
     }
 
     public void RotateTowards(float x, float z) {

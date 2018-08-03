@@ -9,6 +9,11 @@ public class SoldierAnimations : AnimationController {
 		anim.SetTrigger("Attack");
 	}
 
+	override public void ResetAttack()
+	{
+		anim.ResetTrigger("Attack");
+	}
+
 	override public void SetMove(bool moving)
 	{
 		anim.SetBool("Moving", moving);

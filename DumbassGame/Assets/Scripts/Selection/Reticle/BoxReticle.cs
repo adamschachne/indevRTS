@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BoxReticle : MonoBehaviour {
+public class BoxReticle : Reticle {
 
 	private Projector proj;
-	private BoxCollider coll;
+	private BoxCollider box;
 	private float width
 	{
 		get { return Width;}
@@ -33,9 +33,10 @@ public class BoxReticle : MonoBehaviour {
 	private Vector3 posVector;
 
 	// Use this for initialization
-	void Awake () {
+	protected override void Awake() {
+		base.Awake();
 		proj = GetComponent<Projector>();
-		coll = GetComponent<BoxCollider>();
+		box = GetComponent<BoxCollider>();
 		sizeVector = new Vector3(width, height, proj.farClipPlane);
 		posVector = new Vector3(0, 0, sizeVector.z/2);
 		width = projWidth;
@@ -43,7 +44,7 @@ public class BoxReticle : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void Update() {
 		if(width != projWidth) width = projWidth;
 		if(height != projHeight) height = projHeight;
 	}
@@ -66,7 +67,7 @@ public class BoxReticle : MonoBehaviour {
 		sizeVector.y = height;
 		sizeVector.z = proj.farClipPlane;
 		posVector.z = sizeVector.z/2;
-		coll.size = sizeVector;
-		coll.center = posVector;
+		box.size = sizeVector;
+		box.center = posVector;
 	}
 }

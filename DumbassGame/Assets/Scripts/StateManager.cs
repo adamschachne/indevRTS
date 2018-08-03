@@ -150,6 +150,7 @@ public class StateManager : MonoBehaviour
         GameObject myUnits = GetNetUserGameUnits(netID);
         // create a fucking guy in the gameUnits
         GameObject unit = Instantiate(guyPrefab, myUnits.transform);
+        unit.layer = 10 + netID;
         if (name == null) {
             unit.name = GetNextUnitCount(netID).ToString();
         } else {

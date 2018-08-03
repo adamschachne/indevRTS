@@ -18,11 +18,11 @@ TagManager:
   - 
   - PostProcessing
   - Ground
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Player0Units
+  - Player1Units
+  - Player2Units
+  - Player3Units
+  - Reticles
   - 
   - 
   - 

@@ -7,29 +7,27 @@ public class SoldierActions : ActionController {
 	public float attackWidth;
 	public float attackHeight;
 	public float attackDelayInSeconds;
+	public int attackDamage;
 	private float currentDelay;
 
 	private GameObject lastAttack;
-	void Update()
-	{
-		if(currentDelay > 0)
-		{
+	void Update() {
+		if(currentDelay > 0) {
 			currentDelay -= Time.deltaTime;
-			if(currentDelay < 0)
-			{
-				CancelAttack();
-				currentDelay = 0;
+			if(currentDelay <= 0) {
+				ResolveAttack();
 			}
 		}
 	}
 
-	override public void Attack(Vector3 attackPos, Vector3 targetDirection)
-	{
+	override public void Attack(Vector3 attackPos, Vector3 targetDirection) {
 		GameObject hit = Instantiate(hitReticle);
 		lastAttack = hit;
 		BoxReticle reticle = hit.GetComponent<BoxReticle>();
 		reticle.projWidth = attackWidth;
 		reticle.projHeight = attackHeight;
+		reticle.ignoreLayer = gameObject.layer;
+		reticle.damage = attackDamage;
 
 		//set rotation of reticle to be pointing towards target direction
 		hit.transform.rotation = Quaternion.LookRotation(targetDirection);
@@ -44,14 +42,21 @@ public class SoldierActions : ActionController {
 		currentDelay = attackDelayInSeconds;
 	}
 
-	override public bool CancelAttack()
-	{
-		if(lastAttack != null)
-		{
+	override public bool CancelAttack() {
+		if(lastAttack != null) {
 			Destroy(lastAttack);
+			currentDelay = 0;
 			return true;
 		}
 		return false;
+	}
+
+	private void ResolveAttack() {
+		if(lastAttack != null) {
+			Reticle r = lastAttack.GetComponent<Reticle>();
+			r.ResolveAttack();
+		}
+		CancelAttack();
 	}
 
 }

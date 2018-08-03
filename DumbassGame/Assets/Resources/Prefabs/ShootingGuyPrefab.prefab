@@ -925,7 +925,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1149543786897998}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.9915468, y: 4.1947652e-17, z: -3.0861878}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4280224974493866}
@@ -977,7 +977,8 @@ MonoBehaviour:
   hitReticle: {fileID: 1179558671821602, guid: 2736803f2cd56864f94e7eed6ca06d42, type: 2}
   attackWidth: 1
   attackHeight: 10
-  attackDelayInSeconds: 0.8
+  attackDelayInSeconds: 1
+  attackDamage: 5
 --- !u!114 &114189060562313822
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -993,7 +994,7 @@ MonoBehaviour:
   targetDirection: {x: 0, y: 0, z: 0}
   moveSpeed: 3
   rotateSpeed: 0.08
-  moving: 0
+  health: 20
 --- !u!114 &114274970970991136
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1026,10 +1027,10 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 1
   m_Enabled: 1
-  m_Radius: 0.53
+  m_Radius: 0.44
   m_Height: 3.19
   m_Direction: 1
-  m_Center: {x: 0, y: 1.21, z: 0.07}
+  m_Center: {x: 0, y: 1.21, z: 0.11}
 --- !u!137 &137284678717113350
 SkinnedMeshRenderer:
   m_ObjectHideFlags: 1

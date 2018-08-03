@@ -15,6 +15,11 @@ public abstract class AnimationController : MonoBehaviour {
 		Debug.Log("SetAttack function not overridden in an Animation controller!");
 	}
 
+	public virtual void ResetAttack()
+	{
+		Debug.Log("SetAttack function not overridden in an Animation controller!");
+	}
+
 	public virtual void SetMove(bool moving)
 	{
 		Debug.Log("SetMove Animation not overridden in an Animation controller!");
