@@ -141,7 +141,7 @@ public class Selection : MonoBehaviour {
             viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderBack));
     }
 
-    void RemoveSelection(GameObject target) {
+    public void RemoveSelection(GameObject target) {
         bool selectedIndex = this.selectedUnits.Contains(target);
         if (selectedIndex) {
             //target.GetComponent<Outline>().OutlineWidth = 0.0f;
@@ -157,7 +157,9 @@ public class Selection : MonoBehaviour {
     void DeselectAll() {
         //Debug.Log("Deselect All");
         foreach (GameObject unit in this.selectedUnits) {
-            //unit.GetComponent<Outline>().OutlineWidth = 0.0f;
+            if(unit == null)
+                continue;
+
             Selectable selected = unit.GetComponent<Selectable>();
             if (selected.selectionCircle != null) {
                 Destroy(selected.selectionCircle.gameObject);
@@ -263,7 +265,6 @@ public class Selection : MonoBehaviour {
             RaycastHit hitInfo = new RaycastHit();
             if ((Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
                 GameObject obj = hitInfo.transform.gameObject;
-                //if (obj.tag == "Unit")
                 if (obj.GetComponent<Selectable>() != null) {
                     if (this.selectionMode == Mode.Remove) {
                         RemoveSelection(obj);
@@ -282,6 +283,7 @@ public class Selection : MonoBehaviour {
                 this.DeselectAll();
             }
             foreach (Selectable selectableObject in FindObjectsOfType<Selectable>()) {
+
                 GameObject obj = selectableObject.gameObject;
                 if (this.IsWithinSelectionBoundsPoints(obj)) {
                     if (this.selectionMode == Mode.Remove) {

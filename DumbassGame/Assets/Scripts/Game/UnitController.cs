@@ -66,8 +66,15 @@ public class UnitController : MonoBehaviour {
     public void TakeDamage(int damage) {
         health -= damage;
         if(health <= 0) {
-            Destroy(this.gameObject);
+            DestroyThis()
         }
+    }
+
+    private void DestroyThis()
+    {
+        actions.CancelAttack();
+        Destroy(this.gameObject);
+        state.selection.RemoveSelection(this.gameObject);
     }
 
     public void RotateTowards(float x, float z) {
