@@ -994,7 +994,7 @@ MonoBehaviour:
   targetDirection: {x: 0, y: 0, z: 0}
   moveSpeed: 3
   rotateSpeed: 0.08
-  health: 20
+  health: 1
 --- !u!114 &114274970970991136
 MonoBehaviour:
   m_ObjectHideFlags: 1
