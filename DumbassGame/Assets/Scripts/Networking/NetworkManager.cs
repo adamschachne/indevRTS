@@ -110,7 +110,7 @@ public class NetworkManager : MonoBehaviour {
     }
 
     private void SendSync() {
-        // From Client Only
+        // From Server Only
         if (state.isServer == false) {
             return;
         }
@@ -351,20 +351,14 @@ public class NetworkManager : MonoBehaviour {
                             SendSync();
                         }
                         // CLIENT ONLY
-                        else {
+                        if (state.isServer == false) {
                             // currently, the client is always 1 TODO
                             networkID = 1;
                             if (state.inGame == false) {
                                 Debug.Log("starting game");
                                 state.StartGame();
                             }
-                            // send out a request for a unit
-                            RequestUnit req = new RequestUnit();
-                            req.ownerID = networkID;
-                            NetworkJSON netjson = new NetworkJSON();
-                            netjson.json = JsonUtility.ToJson(req);
-                            netjson.type = NetTypes.REQUEST_UNIT;
-                            SendString(JsonUtility.ToJson(netjson), true);
+                            requestNewUnit();
                         }                        
                         break;
                     case NetEventType.ConnectionFailed:
