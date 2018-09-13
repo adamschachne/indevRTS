@@ -26,6 +26,7 @@ public class StateManager : MonoBehaviour
     public InputManager input;
     [Header("Prefabs")]
     public GameObject guyPrefab;
+    public GameObject ironfoePrefab;
     public GameObject gameUnitsPrefab;
     [ReadOnly]
     public GameObject gameUnits;
@@ -64,6 +65,10 @@ public class StateManager : MonoBehaviour
             throw new System.Exception("No Guy defined");
         }
 
+        if (!ironfoePrefab) {
+            throw new System.Exception("No Ironfoe defined");
+        }
+
         network = GetComponent<NetworkManager>();
         if (!network) {
             throw new System.Exception("No NetworkManager defined");
@@ -94,6 +99,7 @@ public class StateManager : MonoBehaviour
     void Start()
     {
         input.Subscribe(SpawnShootGuy, InputActions.RTS.SPAWN_SHOOTGUY);
+        input.Subscribe(SpawnIronfoe, InputActions.RTS.SPAWN_IRONFOE);
     }
 
     // called from NetworkManager
@@ -118,7 +124,10 @@ public class StateManager : MonoBehaviour
     }
 
     private void SpawnShootGuy() {
-        network.requestNewUnit();
+        network.requestNewUnit(1);
+    }
+    private void SpawnIronfoe() {
+        network.requestNewUnit(2);
     }
 
     private GameObject GetNetUserGameUnits(short netID) {
@@ -145,11 +154,26 @@ public class StateManager : MonoBehaviour
         return count + 1;
     }
 
-    public GameObject addUnit(short netID, string name = null) {
+    public GameObject addUnit(short netID, string name = null, short unitType = 1) {
         // get my game units
         GameObject myUnits = GetNetUserGameUnits(netID);
         // create a fucking guy in the gameUnits
-        GameObject unit = Instantiate(guyPrefab, myUnits.transform);
+        GameObject unit;
+        switch(unitType)
+        {
+            case 1:
+            unit = Instantiate(guyPrefab, myUnits.transform);
+            break;
+
+            case 2:
+            unit = Instantiate(ironfoePrefab, myUnits.transform);
+            break;
+
+            default:
+            unit = Instantiate(guyPrefab, myUnits.transform);
+            break;
+
+        }
         unit.layer = 10 + netID;
         if (name == null) {
             unit.name = GetNextUnitCount(netID).ToString();

@@ -24,6 +24,7 @@ public class NetworkUnit {
     public float x;
     public float z;
     public short ownerID; // network id of the owner
+    public short unitType;
 }
 
 [Serializable]
@@ -51,7 +52,7 @@ public class AddUnit {
         if (StateManager.state.isServer == true) {
             return;
         }
-        GameObject unit = StateManager.state.addUnit(netId, netunit.id);
+        GameObject unit = StateManager.state.addUnit(netId, netunit.id, netunit.unitType);
         unit.transform.SetPositionAndRotation(new Vector3(netunit.x, unit.transform.position.y, netunit.z), unit.transform.rotation);
     };
 }
@@ -59,6 +60,7 @@ public class AddUnit {
 [Serializable]
 public class RequestUnit {
     public short ownerID; // the connection that requested a unit
+    public short unitType;
 }
 
 [Serializable]

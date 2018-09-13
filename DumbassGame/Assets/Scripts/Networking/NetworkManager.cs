@@ -202,7 +202,7 @@ public class NetworkManager : MonoBehaviour {
 
         foreach (NetworkUnit netUnit in su.units) {          
             short ownerID = netUnit.ownerID;
-            GameObject unit = state.addUnit(ownerID, netUnit.id);
+            GameObject unit = state.addUnit(ownerID, netUnit.id, netUnit.unitType);
             unit.transform.SetPositionAndRotation(new Vector3(netUnit.x, unit.transform.position.y, netUnit.z), unit.transform.rotation);
         }
     }
@@ -218,7 +218,8 @@ public class NetworkManager : MonoBehaviour {
         // if they cant, do nothing
         // if they can, make a unit and send an addUnit message out
         short netID = ru.ownerID;
-        GameObject unit = state.addUnit(netID);
+        short unitType = ru.unitType;
+        GameObject unit = state.addUnit(netID, null, unitType);
         Vector3 deltaPos = new Vector3(Random.Range(-3, 3), 0, Random.Range(-3, 3));
         unit.transform.position += deltaPos;
 
@@ -228,6 +229,7 @@ public class NetworkManager : MonoBehaviour {
         addUnit.unit.id = unit.name;
         addUnit.unit.x = unit.transform.position.x;
         addUnit.unit.z = unit.transform.position.z;
+        addUnit.unit.unitType = unitType;
 
         NetworkJSON netjson = new NetworkJSON();
         netjson.json = JsonUtility.ToJson(addUnit);
@@ -294,18 +296,20 @@ public class NetworkManager : MonoBehaviour {
         buffer.Dispose();
     }
 
-    public void requestNewUnit()
+    public void requestNewUnit(short unitType = 1)
     {
         if(state.isServer)
         {
             RequestUnit req = new RequestUnit();
             req.ownerID = networkID;
+            req.unitType = unitType;
             HandleRequestUnit(req);
         }
         else
         {
             RequestUnit req = new RequestUnit();
             req.ownerID = networkID;
+            req.unitType = unitType;
             NetworkJSON netjson = new NetworkJSON();
             netjson.json = JsonUtility.ToJson(req);
             netjson.type = NetTypes.REQUEST_UNIT;
