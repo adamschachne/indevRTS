@@ -275,6 +275,10 @@ public class Selection : MonoBehaviour {
                         AddSelection(obj);
                     }
                 }
+                else
+                {
+                    this.DeselectAll();
+                }
             }
         }
         // box selection 
