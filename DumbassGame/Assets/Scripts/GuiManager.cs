@@ -32,6 +32,7 @@ public class GuiManager : MonoBehaviour {
         inputField.ActivateInputField();
         createButton.SetActive(true);
         disconnectButton.SetActive(false);
+        roomID.enabled = false;
     }
 
     public void GameGUI() {
@@ -39,6 +40,7 @@ public class GuiManager : MonoBehaviour {
         inputField.DeactivateInputField();
         createButton.SetActive(false);
         disconnectButton.SetActive(true);
+        roomID.enabled = true;
     }
 
     public void CreateKeybindButtons(List<List<ActionType>>[] groups, StateManager.View[] gameModes)

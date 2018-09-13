@@ -12,6 +12,7 @@
     "ws": "^1.1.0"
   },
   "scripts": {
-    "start": "node-debug --debug-brk=false signal_server.js"
+    "start": "node signal_server.js",
+    "debug": "node inspect signal_server.js"
   }
 }
