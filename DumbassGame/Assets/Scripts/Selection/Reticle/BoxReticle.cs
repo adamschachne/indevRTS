@@ -70,4 +70,29 @@ public class BoxReticle : Reticle {
 		box.size = sizeVector;
 		box.center = posVector;
 	}
+
+	override public void ResolveAttack()
+	{
+		GameObject closest = null;
+		float lastDistance = float.MaxValue;
+
+		foreach(GameObject unit in collObjects) {
+			UnitController uc = unit.GetComponent<UnitController>();
+			if(uc != null) {
+				//uc.TakeDamage(damage);,
+				if((unit.transform.position - this.transform.position).sqrMagnitude <  lastDistance) {
+					lastDistance = (unit.transform.position - this.transform.position).sqrMagnitude;
+					closest = unit;
+				}
+			}
+		}
+
+		if(closest != null)
+		{
+			string netID = closest.transform.parent.gameObject.name;
+			int ID = int.Parse(netID.Remove(0, 3));
+			StateManager.state.network.SendDamage(closest.name, ID, damage);
+		}
+		Destroy(this.gameObject);
+	}
 }

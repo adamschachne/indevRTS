@@ -8,11 +8,21 @@ public class Reticle : MonoBehaviour {
 	public List<GameObject> collObjects;
 	public int ignoreLayer;
 	public int damage;
+	public float currentDelay;
 
 	// Use this for initialization
 	protected virtual void Awake() {
 		coll = GetComponent<Collider>();
 		collObjects = new List<GameObject>();
+	}
+
+	public void Update() {
+		if(currentDelay > 0) {
+			currentDelay -= Time.deltaTime;
+			if(currentDelay <= 0) {
+				ResolveAttack();
+			}
+		}
 	}
 
 	void OnTriggerEnter(Collider col) {
@@ -25,7 +35,7 @@ public class Reticle : MonoBehaviour {
 			collObjects.Remove(col.gameObject);
 	}
 
-	public void ResolveAttack() {
+	public virtual void ResolveAttack() {
 		foreach(GameObject unit in collObjects) {
 			UnitController uc = unit.GetComponent<UnitController>();
 			if(uc != null) {
@@ -35,12 +45,6 @@ public class Reticle : MonoBehaviour {
 				StateManager.state.network.SendDamage(uc.name, ID, damage);
 			}
 		}
-
-
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
+		Destroy(this.gameObject);
 	}
 }

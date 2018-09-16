@@ -12,12 +12,7 @@ public class SoldierActions : ActionController {
 
 	private GameObject lastAttack;
 	void Update() {
-		if(currentDelay > 0) {
-			currentDelay -= Time.deltaTime;
-			if(currentDelay <= 0) {
-				ResolveAttack();
-			}
-		}
+		
 	}
 
 	override public void Attack(Vector3 attackPos, Vector3 targetDirection) {
@@ -28,6 +23,7 @@ public class SoldierActions : ActionController {
 		reticle.projHeight = attackHeight;
 		reticle.ignoreLayer = gameObject.layer;
 		reticle.damage = attackDamage;
+		reticle.currentDelay = attackDelayInSeconds;
 
 		//set rotation of reticle to be pointing towards target direction
 		hit.transform.rotation = Quaternion.LookRotation(targetDirection);
@@ -38,14 +34,11 @@ public class SoldierActions : ActionController {
 		hit.transform.position = this.transform.position + 					//center on unit
 		Vector3.Normalize(targetDirection)*(0.75f + reticle.projHeight/2) + //offset by height/2
 		Vector3.up*reticle.transform.position.y;							//raise above platform
-
-		currentDelay = attackDelayInSeconds;
 	}
 
 	override public bool CancelAttack() {
 		if(lastAttack != null) {
 			Destroy(lastAttack);
-			currentDelay = 0;
 			return true;
 		}
 		return false;
