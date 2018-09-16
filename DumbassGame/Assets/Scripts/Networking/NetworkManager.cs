@@ -179,6 +179,7 @@ public class NetworkManager : MonoBehaviour {
 
         // send the new unit to connections
         SendString(JsonUtility.ToJson(netjson), true);
+        HandleDamageUnit(d);
     }
 
     public void SendStop(string name) {
