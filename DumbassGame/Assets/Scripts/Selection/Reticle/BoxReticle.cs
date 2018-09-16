@@ -44,7 +44,8 @@ public class BoxReticle : Reticle {
 	}
 	
 	// Update is called once per frame
-	void Update() {
+	public override void Update() {
+		base.Update();
 		if(width != projWidth) width = projWidth;
 		if(height != projHeight) height = projHeight;
 	}
