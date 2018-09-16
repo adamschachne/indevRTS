@@ -80,8 +80,7 @@ public class BoxReticle : Reticle {
 		foreach(GameObject unit in collObjects) {
 			UnitController uc = unit.GetComponent<UnitController>();
 			if(uc != null) {
-				//uc.TakeDamage(damage);,
-				if((unit.transform.position - this.transform.position).sqrMagnitude <  lastDistance) {
+				if((unit.transform.position - shootPos).sqrMagnitude <  lastDistance) {
 					lastDistance = (unit.transform.position - this.transform.position).sqrMagnitude;
 					closest = unit;
 				}

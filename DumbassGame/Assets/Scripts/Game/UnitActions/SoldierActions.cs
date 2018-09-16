@@ -24,6 +24,7 @@ public class SoldierActions : ActionController {
 		reticle.ignoreLayer = gameObject.layer;
 		reticle.damage = attackDamage;
 		reticle.currentDelay = attackDelayInSeconds;
+		reticle.shootPos = new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z);
 
 		//set rotation of reticle to be pointing towards target direction
 		hit.transform.rotation = Quaternion.LookRotation(targetDirection);

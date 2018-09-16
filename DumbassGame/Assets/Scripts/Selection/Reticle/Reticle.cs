@@ -9,6 +9,7 @@ public class Reticle : MonoBehaviour {
 	public int ignoreLayer;
 	public int damage;
 	public float currentDelay;
+	public Vector3 shootPos;
 
 	// Use this for initialization
 	protected virtual void Awake() {
@@ -19,9 +20,10 @@ public class Reticle : MonoBehaviour {
 	public virtual void Update() {
 		if(currentDelay > 0) {
 			currentDelay -= Time.deltaTime;
-			if(currentDelay <= 0) {
-				ResolveAttack();
-			}
+		}
+
+		if(currentDelay <= 0) {
+			ResolveAttack();
 		}
 	}
 
