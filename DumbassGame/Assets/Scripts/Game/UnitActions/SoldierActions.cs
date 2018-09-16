@@ -53,7 +53,7 @@ public class SoldierActions : ActionController {
 
 	private void ResolveAttack() {
 		if(lastAttack != null) {
-			Reticle r = lastAttack.GetComponent<Reticle>();
+			BoxReticle r = lastAttack.GetComponent<BoxReticle>();
 			r.ResolveAttack();
 		}
 		CancelAttack();

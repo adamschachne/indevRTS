@@ -27,6 +27,24 @@ namespace InputActions {
 			return new ModKey(key, shift, ctrl, alt);
 		}
 
+		
+		public ModKey[] ModularCopy()
+		{
+			ModKey[] modularKeys = new ModKey[4];
+			this.alt = false;
+            this.ctrl  = false;
+            this.shift = false;
+			modularKeys[0] = this;
+			modularKeys[1] = this.Copy();
+            modularKeys[1].shift = true;
+			modularKeys[2] = this.Copy();
+            modularKeys[2].ctrl = true;
+			modularKeys[3] = this.Copy();
+            modularKeys[3].alt = true;
+
+			return modularKeys;
+		}
+
 		public override bool Equals(System.Object obj)
 		{
 			ModKey other = obj as ModKey;
@@ -83,13 +101,16 @@ namespace InputActions {
 		//This is how to define whether an Action should trigger when the input is pressed down, is held, or is released
 		public readonly InputType inputType;
 
+		//modular is a bool that can be flagged if the action needs to listen to any variations of shift/alt/ctrl + the key
+		public readonly bool modular;
+
 		//this is the default key combo that this action will be set to.
 		public readonly ModKey defaultKey;
 		public ModKey currentKey;
 
 		protected readonly List<Action> subscribers;
 
-		protected ActionType(int _index, string _name, ModKey _defaultKey = null, String _group = "NONE", InputType _inputType = InputType.Down) {
+		protected ActionType(int _index, string _name, ModKey _defaultKey = null, String _group = "NONE", InputType _inputType = InputType.Down, bool _modular = false) {
 			index = _index;
 			name = _name;
 			subscribers = new List<Action>();
@@ -110,6 +131,7 @@ namespace InputActions {
 				group = _group;
 			}
 			inputType = _inputType;
+			modular = _modular;
 			
 		}
 
@@ -176,8 +198,8 @@ namespace InputActions {
 		public static ActionType[] actions = new ActionType[]{MENU};
 
 		public static readonly StateManager.View view = StateManager.View.Global;
-		private Global(int _index, string _name, ModKey _defaultKey = null, String _group = "NONE", InputType _inputType = InputType.Down) 
-			: base(_index, _name, _defaultKey, _group, _inputType){ }
+		private Global(int _index, string _name, ModKey _defaultKey = null, String _group = "NONE", InputType _inputType = InputType.Down, bool _modular = false) 
+			: base(_index, _name, _defaultKey, _group, _inputType, _modular){ }
 	}
 
 	public class Lobby : ActionType {
@@ -185,15 +207,15 @@ namespace InputActions {
 		//public static readonly Lobby NONE = new Lobby(0, "NONE");
 		public static ActionType[] actions = new ActionType[]{};
 		public static readonly StateManager.View view = StateManager.View.Lobby;
-		private Lobby(int _index, string _name, ModKey _defaultKey = null, String _group = "NONE", InputType _inputType = InputType.Down) 
-			: base(_index, _name, _defaultKey, _group, _inputType){ }
+		private Lobby(int _index, string _name, ModKey _defaultKey = null, String _group = "NONE", InputType _inputType = InputType.Down, bool _modular = false) 
+			: base(_index, _name, _defaultKey, _group, _inputType, _modular){ }
 	}
 
 	//use this as reference for making new ActionTypes
 	public class RTS : ActionType {
 
-		public static readonly RTS SELECT_DOWN = new RTS(0, "SELECT_DOWN", new ModKey(KeyCode.Mouse0), "Select", InputType.Down);
-		public static readonly RTS SELECT_UP = new RTS(1, "SELECT_UP", new ModKey(KeyCode.Mouse0), "Select",  InputType.Up);
+		public static readonly RTS SELECT_DOWN = new RTS(0, "SELECT_DOWN", new ModKey(KeyCode.Mouse0), "Select", InputType.Down, true);
+		public static readonly RTS SELECT_UP = new RTS(1, "SELECT_UP", new ModKey(KeyCode.Mouse0), "Select",  InputType.Up, true);
 		public static readonly RTS MOVE = new RTS(2, "Move", new ModKey(KeyCode.Mouse1));
 		public static readonly RTS STOP = new RTS(3, "Stop", new ModKey(KeyCode.S));
 		public static readonly RTS SPAWN_SHOOTGUY = new RTS(4, "Spawn Soldier", new ModKey(KeyCode.Alpha1));
@@ -206,8 +228,8 @@ namespace InputActions {
 		//this variable MUST be named view
 		public static readonly StateManager.View view = StateManager.View.RTS;
 
-		private RTS(int _index, string _name, ModKey _defaultKey = null, String _group = "NONE", InputType _inputType = InputType.Down) 
-			: base(_index, _name, _defaultKey, _group, _inputType){ }
+		private RTS(int _index, string _name, ModKey _defaultKey = null, String _group = "NONE", InputType _inputType = InputType.Down, bool _modular = false) 
+			: base(_index, _name, _defaultKey, _group, _inputType, _modular){ }
 	}
 
 

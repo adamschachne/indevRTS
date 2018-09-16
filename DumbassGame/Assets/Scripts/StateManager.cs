@@ -215,6 +215,17 @@ public class StateManager : MonoBehaviour
         }
     }
 
+    public void DamageUnit(short ownerID, string name, int damage)
+    {
+        GameObject units = GetNetUserGameUnits(ownerID);
+        foreach(Transform child in units.transform) {
+            if(child.name.Equals(name)) {
+                child.GetComponent<UnitController>().TakeDamage(damage);
+                return;
+            }
+        }
+    }
+
     // called from NetworkManager
     public void LeaveGame() {
         unitCounts = new Dictionary<short, int>();

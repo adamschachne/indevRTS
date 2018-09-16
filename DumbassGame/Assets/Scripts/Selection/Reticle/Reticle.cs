@@ -29,9 +29,14 @@ public class Reticle : MonoBehaviour {
 		foreach(GameObject unit in collObjects) {
 			UnitController uc = unit.GetComponent<UnitController>();
 			if(uc != null) {
-				uc.TakeDamage(damage);
+				//uc.TakeDamage(damage);
+				string netID = unit.transform.parent.gameObject.name;
+				int ID = int.Parse(netID.Remove(0, 3));
+				StateManager.state.network.SendDamage(uc.name, ID, damage);
 			}
 		}
+
+
 	}
 	
 	// Update is called once per frame

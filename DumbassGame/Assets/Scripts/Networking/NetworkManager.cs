@@ -159,6 +159,28 @@ public class NetworkManager : MonoBehaviour {
         SendString(JsonUtility.ToJson(netjson), true);
     }
 
+    public void SendDamage(string name, int ID, int damage)
+    {
+        if(state.isServer == false)
+        {
+            return;
+        }
+
+        Damage d = new Damage {
+            id = name,
+            ownerID = (short)ID,
+            damage = damage
+        };
+
+        NetworkJSON netjson = new NetworkJSON {
+            json = JsonUtility.ToJson(d),
+            type = NetTypes.DAMAGE_UNIT
+        };
+
+        // send the new unit to connections
+        SendString(JsonUtility.ToJson(netjson), true);
+    }
+
     public void SendStop(string name) {
         Stop stop = new Stop {
             id = name,
@@ -252,6 +274,11 @@ public class NetworkManager : MonoBehaviour {
         state.AttackCommand(attack.ownerID, attack.id, attack.x, attack.z);
     }
 
+    private void HandleDamageUnit(Damage damage)
+    {
+        state.DamageUnit(damage.ownerID, damage.id, damage.damage);
+    }
+
     private void HandleIncommingMessage(ref NetworkEvent evt) {
         short requestID = evt.ConnectionId.id;
         MessageDataBuffer buffer = (MessageDataBuffer)evt.MessageData;
@@ -284,6 +311,10 @@ public class NetworkManager : MonoBehaviour {
                 case NetTypes.ATTACK_UNIT:
                     Attack attack = JsonUtility.FromJson<Attack>(netjson.json);
                     HandleAttackCommand(attack);
+                    break;
+                case NetTypes.DAMAGE_UNIT:
+                    Damage damage = JsonUtility.FromJson<Damage>(netjson.json);
+                    HandleDamageUnit(damage);
                     break;
                 default:
                     Debug.Log("UNKNOWN TYPE: " + netjson.type);

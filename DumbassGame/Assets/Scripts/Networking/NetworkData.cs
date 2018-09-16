@@ -10,6 +10,7 @@ public class NetTypes {
     public const string MOVE_UNIT = "MOVE"; // command move a unit
     public const string STOP_UNIT = "STOP"; // command a unit to stop
     public const string ATTACK_UNIT = "ATTACK"; //command a unit to attack
+    public const string DAMAGE_UNIT = "DAMAGE"; //send damage to a unit
 }
 
 [Serializable]
@@ -83,4 +84,11 @@ public class Attack {
     public short ownerID;
     public float x;
     public float z;
+}
+
+[Serializable]
+public class Damage {
+    public string id;
+    public short ownerID;
+    public int damage;
 }

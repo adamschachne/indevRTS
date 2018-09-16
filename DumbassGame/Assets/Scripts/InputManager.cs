@@ -139,20 +139,55 @@ public class InputManager : MonoBehaviour
     }
 
     private void bind(StateManager.View v, ModKey newKey, List<ActionType> group) {
-        
-        if(keyMap[(int)v].ContainsKey(group[0].currentKey))
-        {
-            keyMap[(int)v].Remove(group[0].currentKey);
-        }
-        
+        if(!group[0].modular) {
+            if(keyMap[(int)v].ContainsKey(group[0].currentKey)) {
+                keyMap[(int)v].Remove(group[0].currentKey);
+            }
+            
 
-        if(keyMap[(int)v].ContainsKey(newKey)) {
-            keyMap[(int)v][newKey][0].currentKey = ModKey.none;
-            keyMap[(int)v].Remove(newKey);
+            if(keyMap[(int)v].ContainsKey(newKey)) {
+                keyMap[(int)v][newKey][0].currentKey = ModKey.none;
+                keyMap[(int)v].Remove(newKey);
+            }
+            group[0].currentKey = newKey;
+            keyMap[(int)v][newKey] = group;
+            endBind();
         }
-        group[0].currentKey = newKey;
-        keyMap[(int)v][newKey] = group;
-        endBind();
+        else
+        {
+            ModKey[] oldKeys = group[0].currentKey.ModularCopy();
+            ModKey[] newKeys = newKey.ModularCopy();
+
+            if(keyMap[(int)v].ContainsKey(oldKeys[0])) {
+                keyMap[(int)v].Remove(oldKeys[0]);
+            }
+            
+
+            if(keyMap[(int)v].ContainsKey(newKeys[0])) {
+                keyMap[(int)v][newKeys[0]][0].currentKey = ModKey.none;
+                keyMap[(int)v].Remove(newKeys[0]);
+            }
+
+            keyMap[(int)v][newKeys[0]] = group;
+
+            for(int i = 0; i < oldKeys.Length; ++i)
+            {
+                if(keyMap[(int)v].ContainsKey(oldKeys[i])) {
+                    keyMap[(int)v].Remove(oldKeys[i]);
+                }
+            
+
+                if(keyMap[(int)v].ContainsKey(newKeys[i])) {
+                    keyMap[(int)v][newKeys[i]][0].currentKey = ModKey.none;
+                    keyMap[(int)v].Remove(newKeys[i]);
+                }
+                
+                keyMap[(int)v][newKeys[i]] = group;
+            }
+
+            group[0].currentKey = newKeys[0];
+            endBind();
+        }
     }
 
     private ActionType getActionFromInput(List<ActionType> group, ActionType.InputType inputType) {
