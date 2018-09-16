@@ -78,7 +78,8 @@ public class BoxReticle : Reticle {
 		float lastDistance = float.MaxValue;
 
 		foreach(GameObject unit in collObjects) {
-			UnitController uc = unit.GetComponent<UnitController>();
+			UnitController uc = null;
+			if(unit != null) uc = unit.GetComponent<UnitController>();
 			if(uc != null) {
 				if((unit.transform.position - shootPos).sqrMagnitude <  lastDistance) {
 					lastDistance = (unit.transform.position - this.transform.position).sqrMagnitude;
