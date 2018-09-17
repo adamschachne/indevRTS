@@ -122,16 +122,18 @@ public class Selection : MonoBehaviour {
         float radius = collider.radius;
         float height = collider.height;
 
+        
         Vector3 colliderTop = colliderCenter + new Vector3(0.0f, height / 2, 0.0f);
         Vector3 colliderBot = colliderCenter - new Vector3(0.0f, height / 2, 0.0f);
         Vector3 colliderRight = colliderCenter + new Vector3(radius, 0.0f, 0.0f);
         Vector3 colliderLeft = colliderCenter - new Vector3(radius, 0.0f, 0.0f);
         Vector3 colliderFront = colliderCenter + new Vector3(0.0f, 0.0f, radius);
         Vector3 colliderBack = colliderCenter - new Vector3(0.0f, 0.0f, radius);
+        
 
         Bounds viewportBounds = Utils.GetViewportBounds(Camera.main, mousePositionInitial, Input.mousePosition);
 
-        return
+        return 
             viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderCenter)) ||
             viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderTop)) ||
             viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderBot)) ||
@@ -289,7 +291,7 @@ public class Selection : MonoBehaviour {
             foreach (Selectable selectableObject in FindObjectsOfType<Selectable>()) {
 
                 GameObject obj = selectableObject.gameObject;
-                if (this.IsWithinSelectionBoundsPoints(obj)) {
+                if (this.IsWithinSelectionBoundsVolume(obj)) {
                     if (this.selectionMode == Mode.Remove) {
                         RemoveSelection(obj);
                     } else {
