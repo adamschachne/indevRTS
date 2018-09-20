@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class UnitController : MonoBehaviour {
 
@@ -15,6 +16,7 @@ public class UnitController : MonoBehaviour {
 
     private AnimationController anim;
     private ActionController actions;
+    private NavMeshAgent agent;
 
     // Use this for initialization
     void Start () {
@@ -28,6 +30,7 @@ public class UnitController : MonoBehaviour {
         targetPosition = transform.position;
         anim = GetComponent<AnimationController>();
         actions = GetComponent<ActionController>();
+        agent = GetComponent<NavMeshAgent>();
     }
 
     // Called by user
@@ -45,6 +48,7 @@ public class UnitController : MonoBehaviour {
             anim.ResetAttack();
         }
         targetPosition = new Vector3(x, transform.position.y, z);
+        agent.destination = targetPosition;
         RotateTowards(x, z);
     }
 
@@ -98,8 +102,8 @@ public class UnitController : MonoBehaviour {
     void Update () {
         // check if distance to target is greater than distance threshold
         if (Vector3.Distance(transform.position, targetPosition) > 0.1f) {
-            float step = moveSpeed * Time.deltaTime;
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
+            //float step = moveSpeed * Time.deltaTime;
+            //transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
             moving = true;
         }
         else
