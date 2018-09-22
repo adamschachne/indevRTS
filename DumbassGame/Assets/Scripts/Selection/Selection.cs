@@ -14,7 +14,7 @@ public class Selection : MonoBehaviour {
     Vector3 mousePositionInitial;
     Vector3[] selFrustumCorners;
     public LayerMask movementLayerMask;
-
+    const float MIN_LENGTH = 0.0005f;
     private StateManager state;
 
     
@@ -57,22 +57,40 @@ public class Selection : MonoBehaviour {
             selectionMode = Mode.None;
         }
 
-        /* DEBUG */
+        /* DEBUG RAY */
         //if (selFrustumCorners == null) {
         //    return;
         //}
         //foreach (Vector3 ray in selFrustumCorners) {
-            
         //    Debug.DrawRay(Camera.main.transform.position, ray, Color.yellow);
-        //}        
+        //}
+        /* END DEBUG RAY */
     }
-    
+
     void OnGUI() {
         if (leftClickHeld) {
             // Create a rect from both mouse positions
             var rect = Utils.GetScreenRect(mousePositionInitial, Input.mousePosition);
             Utils.DrawScreenRect(rect, new Color(0.8f, 0.8f, 0.95f, 0.25f));
             Utils.DrawScreenRectBorder(rect, 2, new Color(0.8f, 0.8f, 0.95f));
+
+            /* DEBUG RAY */
+            //float x = rect.x / Screen.width;
+            //float y = 1.0f - rect.y / Screen.height;
+            //float xMax = rect.xMax / Screen.width;
+            //float yMax = 1.0f - rect.yMax / Screen.height;
+
+            //Rect selRect = new Rect(x, y, Mathf.Abs(xMax - x), yMax - y);
+            //Camera camera = Camera.main;
+            ////Vector3[] selFrustumCorners = new Vector3[4];
+            //selFrustumCorners = new Vector3[4];
+            //camera.CalculateFrustumCorners(selRect, camera.farClipPlane, Camera.MonoOrStereoscopicEye.Mono, selFrustumCorners);
+            //for (int i = 0; i < 4; i++) {
+            //    // transform to world space
+            //    selFrustumCorners[i] = camera.transform.TransformVector(selFrustumCorners[i]);
+            //    //Debug.DrawRay(camera.transform.position, selFrustumCorners[i], Color.yellow);      
+            //}
+            /* END DEBUG RAY */
         }
     }
 
@@ -83,21 +101,24 @@ public class Selection : MonoBehaviour {
         var rect = Utils.GetScreenRect(mousePositionInitial, Input.mousePosition);
         //Bounds viewportBounds = Utils.GetViewportBounds(Camera.main, mousePositionInitial, Input.mousePosition);
 
-        //Debug.Log("rect: " + rect.y + " " + rect.yMax);
         float x = rect.x / Screen.width;
         float y = 1.0f - rect.y / Screen.height;
         float xMax = rect.xMax / Screen.width;
         float yMax = 1.0f - rect.yMax / Screen.height;
 
-        Rect selRect = new Rect(x, y, Mathf.Abs(xMax - x), yMax - y);
+        float width = Mathf.Abs(xMax - x);
+        float height = yMax - y;
+        width = width == 0 ? MIN_LENGTH : width;
+        height = height == 0 ? MIN_LENGTH : height;
+        Rect selRect = new Rect(x, y, width, height);
         Camera camera = Camera.main;
-        //Vector3[] selFrustumCorners = new Vector3[4];
+
         selFrustumCorners = new Vector3[4];
         camera.CalculateFrustumCorners(selRect, camera.farClipPlane, Camera.MonoOrStereoscopicEye.Mono, selFrustumCorners);
         for (int i = 0; i < 4; i++) {
             // transform to world space
             selFrustumCorners[i] = camera.transform.TransformVector(selFrustumCorners[i]);
-            //Debug.DrawRay(camera.transform.position, selFrustumCorners[i], Color.yellow);            
+            //Debug.DrawRay(camera.transform.position, selFrustumCorners[i], Color.yellow);      
         }
 
         Plane[] selectionVolumePlanes = new Plane[5];
