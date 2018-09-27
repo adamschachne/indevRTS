@@ -212,10 +212,10 @@ public class NetworkManager : MonoBehaviour {
         SendString(JsonUtility.ToJson(netjson), true);
     }
 
-    public void SendSyncPos(string name, float x, float z) {
+    public void SendSyncPos(string name, short owner, float x, float z) {
         SyncPos syncPos = new SyncPos  {
             id = name,
-            ownerID = networkID,
+            ownerID = owner,
             x = x,
             z = z
         };

@@ -30,6 +30,7 @@ public class UnitController : MonoBehaviour {
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
         } else {
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+            agent.updatePosition = false;
         }
 
         agent.destination = this.transform.position;
@@ -106,12 +107,15 @@ public class UnitController : MonoBehaviour {
 
     public void CmdSyncPos() {
         if(agent.obstacleAvoidanceType == ObstacleAvoidanceType.HighQualityObstacleAvoidance) {
-            state.network.SendSyncPos(this.name, this.transform.position.x, this.transform.position.z);
+            state.network.SendSyncPos(this.name, short.Parse(this.transform.parent.name.Remove(0, 3)), this.transform.position.x, this.transform.position.z);
         }
     }
 
     public void SyncPos(float x, float z) {
-        this.transform.position.Set(x, this.transform.position.y, z);
+        if(!state.isServer) {
+            this.transform.position = new Vector3(x, this.transform.position.y, z);
+            Debug.Log("Trying to set position to: " + x + "," + z);
+        }
     }
 
     // Update is called once per frame
@@ -140,6 +144,7 @@ public class UnitController : MonoBehaviour {
                 }
             }
         }
+        //this.transform.position = new Vector3(this.transform.position.x + 0.1f, this.transform.position.y, this.transform.position.z);
 
         if(agent.obstacleAvoidanceType == ObstacleAvoidanceType.HighQualityObstacleAvoidance) {
             CmdSyncPos();
