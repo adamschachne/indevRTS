@@ -250,7 +250,7 @@ public class StateManager : MonoBehaviour
         GameObject unit;
         if(unitLookup.TryGetValue(units.name+name, out unit))
         {
-            Debug.Log("Trying to sync unit: " + units.name+name);
+            //Debug.Log("Trying to sync unit: " + units.name+name);
             unit.GetComponent<UnitController>().SyncPos(x, z);
         }
         else

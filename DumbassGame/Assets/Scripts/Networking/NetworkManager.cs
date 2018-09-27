@@ -346,6 +346,7 @@ public class NetworkManager : MonoBehaviour {
                     break;
             }
         } catch (System.Exception e) {
+            Debug.Log("Exception thrown: " + e.ToString());
             Debug.Log(e.InnerException.ToString() + ": " + msg);
         }
         //return the buffer so the network can reuse it
@@ -373,7 +374,7 @@ public class NetworkManager : MonoBehaviour {
         }
     }
 
-    private void FixedUpdate() {
+    private void Update() {
         //check if the network was created
         if (mNetwork != null) {
             mNetwork.Update();
