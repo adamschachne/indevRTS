@@ -4,14 +4,13 @@ using UnityEngine;
 using UnityEngine.AI;
 
 public class UnitController : MonoBehaviour {
-
-    public Vector3 targetPosition;
     public Vector3 targetDirection;
     public float moveSpeed = 3.0f;
-    public float rotateSpeed = 0.08f;
+    public float rotateSpeed = 0.65f;
+    private float rotateCounter = 0;
     public int health = 20;
     private bool moving = false;
-
+    private bool rotating = false;
     private StateManager state;
 
     private AnimationController anim;
@@ -20,24 +19,27 @@ public class UnitController : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        //state = GameObject.Find("StateManager").GetComponent<StateManager>();    
-        //if (!transform.parent.gameObject.name.Equals("GU-" + state.network.networkID)) {
-        //}
         state = StateManager.state;
         if (!state) {
             throw new System.Exception("no state found");
         }
-        targetPosition = transform.position;
         anim = GetComponent<AnimationController>();
         actions = GetComponent<ActionController>();
         agent = GetComponent<NavMeshAgent>();
+        if(state.isServer) {
+            agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+        } else {
+            agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+        }
+
+        agent.destination = this.transform.position;
+        rotateSpeed = rotateSpeed/60;
+        targetDirection = new Vector3(0,0,0);
     }
 
     // Called by user
     public void CmdMoveTo(Vector3 targetPos) {        
         MoveTo(targetPos.x, targetPos.z);
-
-        // send data across network TODO
         state.network.SendMove(this.name, targetPos.x, targetPos.z);
     }
     // Called by other users
@@ -47,9 +49,8 @@ public class UnitController : MonoBehaviour {
             anim.SetIdle();
             anim.ResetAttack();
         }
-        targetPosition = new Vector3(x, transform.position.y, z);
-        agent.destination = targetPosition;
-        RotateTowards(x, z);
+        rotating = false;
+        agent.destination = new Vector3(x, transform.position.y, z);
     }
 
     public void CmdStop()
@@ -60,6 +61,7 @@ public class UnitController : MonoBehaviour {
     public void Stop()
     {
         MoveTo(this.transform.position.x, this.transform.position.z);
+        rotating = false;
         if(actions.CancelAttack())
         {
             anim.SetIdle();
@@ -77,12 +79,16 @@ public class UnitController : MonoBehaviour {
     private void DestroyThis()
     {
         actions.CancelAttack();
-        Destroy(this.gameObject);
+        state.RemoveUnit(this.gameObject);
+        this.transform.parent = null;
         state.selection.RemoveSelection(this.gameObject);
+        Destroy(this.gameObject);
     }
 
     public void RotateTowards(float x, float z) {
-        targetDirection = new Vector3(x, transform.position.y, z) - transform.position;
+        rotateCounter = 0;
+        targetDirection = Vector3.Normalize(new Vector3(x, transform.position.y, z) - transform.position);
+        rotating = true;
     }
 
     public void CmdAttack(Vector3 targetPos)
@@ -98,22 +104,47 @@ public class UnitController : MonoBehaviour {
         actions.Attack(new Vector3(x, transform.position.y, z), targetDirection);
     }
 
+    public void CmdSyncPos() {
+        if(agent.obstacleAvoidanceType == ObstacleAvoidanceType.HighQualityObstacleAvoidance) {
+            state.network.SendSyncPos(this.name, this.transform.position.x, this.transform.position.z);
+        }
+    }
+
+    public void SyncPos(float x, float z) {
+        this.transform.position.Set(x, this.transform.position.y, z);
+    }
+
     // Update is called once per frame
     void Update () {
+
         // check if distance to target is greater than distance threshold
-        if (Vector3.Distance(transform.position, targetPosition) > 0.1f) {
+        if (Vector3.Distance(transform.position, agent.steeringTarget) > 0.1f) {
             //float step = moveSpeed * Time.deltaTime;
             //transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
             moving = true;
+            Vector3 lookDir = (agent.steeringTarget - this.transform.position) - this.transform.forward;
+            this.transform.forward += lookDir*rotateSpeed;
         }
         else
         {
             moving = false;
+            if(rotating) {
+                if(rotateCounter < 1) {
+                    rotateCounter += rotateSpeed;
+                    this.transform.forward = Vector3.Lerp(this.transform.forward, targetDirection, rotateCounter);
+                } 
+                else {
+                    targetDirection = Vector3.zero;
+                    rotating = false;
+                    rotateCounter = 0;
+                }
+            }
         }
 
+        if(agent.obstacleAvoidanceType == ObstacleAvoidanceType.HighQualityObstacleAvoidance) {
+
+        }
         anim.SetMove(moving);
 
-        Vector3 newDir = Vector3.RotateTowards(transform.forward, targetDirection, rotateSpeed, 0.0f);
-        transform.rotation = Quaternion.LookRotation(newDir);
     }
 }

@@ -667,10 +667,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bea240f888bc9344497878388369b364, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetPosition: {x: 0, y: 0, z: 0}
   targetDirection: {x: 0, y: 0, z: 0}
   moveSpeed: 3
-  rotateSpeed: 0.08
+  rotateSpeed: 0.5
   health: 20
 --- !u!114 &114756485798347194
 MonoBehaviour:
@@ -784,7 +783,7 @@ NavMeshAgent:
   m_AgentTypeID: 0
   m_Radius: 0.5
   m_Speed: 3
-  m_Acceleration: 8
+  m_Acceleration: 180
   avoidancePriority: 50
   m_AngularSpeed: 120
   m_StoppingDistance: 0
@@ -794,4 +793,4 @@ NavMeshAgent:
   m_Height: 3.5
   m_BaseOffset: 0
   m_WalkableMask: 3
-  m_ObstacleAvoidanceType: 4
+  m_ObstacleAvoidanceType: 0

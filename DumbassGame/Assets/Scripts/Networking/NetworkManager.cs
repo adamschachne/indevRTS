@@ -212,6 +212,22 @@ public class NetworkManager : MonoBehaviour {
         SendString(JsonUtility.ToJson(netjson), true);
     }
 
+    public void SendSyncPos(string name, float x, float z) {
+        SyncPos syncPos = new SyncPos  {
+            id = name,
+            ownerID = networkID,
+            x = x,
+            z = z
+        };
+
+        NetworkJSON netjson = new NetworkJSON {
+            json = JsonUtility.ToJson(syncPos),
+            type = NetTypes.SYNC_POS
+        };
+
+        SendString(JsonUtility.ToJson(netjson), true);
+    }
+
     private void HandleSync(SyncUnits su) {
         Debug.Log("HANDLING SYNC");
         // Client Only
@@ -280,6 +296,10 @@ public class NetworkManager : MonoBehaviour {
         state.DamageUnit(damage.ownerID, damage.id, damage.damage);
     }
 
+    private void HandleSyncPos(SyncPos syncPos) {
+        state.SyncPos(syncPos.ownerID, syncPos.id, syncPos.x, syncPos.z);
+    }
+
     private void HandleIncommingMessage(ref NetworkEvent evt) {
         short requestID = evt.ConnectionId.id;
         MessageDataBuffer buffer = (MessageDataBuffer)evt.MessageData;
@@ -316,6 +336,10 @@ public class NetworkManager : MonoBehaviour {
                 case NetTypes.DAMAGE_UNIT:
                     Damage damage = JsonUtility.FromJson<Damage>(netjson.json);
                     HandleDamageUnit(damage);
+                    break;
+                case NetTypes.SYNC_POS:
+                    SyncPos syncPos = JsonUtility.FromJson<SyncPos>(netjson.json);
+                    HandleSyncPos(syncPos);
                     break;
                 default:
                     Debug.Log("UNKNOWN TYPE: " + netjson.type);
