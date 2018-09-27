@@ -142,7 +142,7 @@ public class UnitController : MonoBehaviour {
         }
 
         if(agent.obstacleAvoidanceType == ObstacleAvoidanceType.HighQualityObstacleAvoidance) {
-
+            CmdSyncPos();
         }
         anim.SetMove(moving);
 
