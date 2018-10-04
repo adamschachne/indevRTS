@@ -347,7 +347,10 @@ public class NetworkManager : MonoBehaviour {
             }
         } catch (System.Exception e) {
             Debug.Log("Exception thrown: " + e.ToString());
-            Debug.Log(e.InnerException.ToString() + ": " + msg);
+            if(msg != null)
+                Debug.Log(e.InnerException.ToString() + ": " + msg);
+            else
+                Debug.Log("A message was null :(");
         }
         //return the buffer so the network can reuse it
         buffer.Dispose();

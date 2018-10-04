@@ -144,7 +144,6 @@ public class UnitController : MonoBehaviour {
                 }
             }
         }
-        //this.transform.position = new Vector3(this.transform.position.x + 0.1f, this.transform.position.y, this.transform.position.z);
 
         if(agent.obstacleAvoidanceType == ObstacleAvoidanceType.HighQualityObstacleAvoidance) {
             CmdSyncPos();
