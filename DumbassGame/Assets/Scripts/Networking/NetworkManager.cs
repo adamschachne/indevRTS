@@ -304,8 +304,14 @@ public class NetworkManager : MonoBehaviour {
         short requestID = evt.ConnectionId.id;
         MessageDataBuffer buffer = (MessageDataBuffer)evt.MessageData;
         string msg = Encoding.UTF8.GetString(buffer.Buffer, 0, buffer.ContentLength);
+
         try {
             NetworkJSON netjson = JsonUtility.FromJson<NetworkJSON>(msg);
+
+            if(netjson == null) {
+                Debug.Log("Json was null!");
+            }
+
             switch (netjson.type) {
                 case NetTypes.SYNC:
                     SyncUnits su = JsonUtility.FromJson<SyncUnits>(netjson.json);
@@ -345,10 +351,10 @@ public class NetworkManager : MonoBehaviour {
                     Debug.Log("UNKNOWN TYPE: " + netjson.type);
                     break;
             }
-        } catch (System.Exception e) {
+        } catch (System.NullReferenceException e) {
             Debug.Log("Exception thrown: " + e.ToString());
             if(msg != null)
-                Debug.Log(e.InnerException.ToString() + ": " + msg);
+                Debug.Log(msg);
             else
                 Debug.Log("A message was null :(");
         }
@@ -377,7 +383,7 @@ public class NetworkManager : MonoBehaviour {
         }
     }
 
-    private void Update() {
+    private void FixedUpdate() {
         //check if the network was created
         if (mNetwork != null) {
             mNetwork.Update();

@@ -112,7 +112,7 @@ public class UnitController : MonoBehaviour {
     }
 
     public void SyncPos(float x, float z) {
-        if(!state.isServer) {
+        if(state != null && !state.isServer) {
             this.transform.position = new Vector3(x, this.transform.position.y, z);
             //Debug.Log("Trying to set position to: " + x + "," + z);
         }

@@ -88,12 +88,19 @@ public class BoxReticle : Reticle {
 			}
 		}
 
-		if(closest != null)
-		{
-			string netID = closest.transform.parent.gameObject.name;
-			int ID = int.Parse(netID.Remove(0, 3));
-			StateManager.state.network.SendDamage(closest.name, ID, damage);
+		try {
+			if(closest != null && closest.transform.parent != null)
+			{
+				string netID = closest.transform.parent.gameObject.name;
+				int ID = int.Parse(netID.Remove(0, 3));
+				StateManager.state.network.SendDamage(closest.name, ID, damage);
+			}
+			Destroy(this.gameObject);
+		} catch (System.NullReferenceException e) {
+			Debug.Log("Null Reference Exception at BoxReticle ResolveAttack");
+			Debug.Log("Closest Unit isNull: " + closest);
+			Debug.Log("Closest Unit parent transform isNull: " + closest.transform.parent);
+			Debug.Log("Closest Unit parent gameObject isNull: " + closest.transform.parent.gameObject);
 		}
-		Destroy(this.gameObject);
 	}
 }

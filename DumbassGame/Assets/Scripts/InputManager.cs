@@ -199,7 +199,7 @@ public class InputManager : MonoBehaviour
         return null;
     }
 
-    void Update() {
+    void FixedUpdate() {
         //update the state of our current input's modifiers.
         if(ci == null)
             return;
