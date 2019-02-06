@@ -11,6 +11,8 @@ public class NetTypes {
     public const string STOP_UNIT = "STOP"; // command a unit to stop
     public const string ATTACK_UNIT = "ATTACK"; //command a unit to attack
     public const string DAMAGE_UNIT = "DAMAGE"; //send damage to a unit
+    public const string SYNC_POS = "SYNCPOSITION"; //sync a unit's position across network
+    public const string BATCH = "BATCH"; //sync a list of units all at once
 }
 
 [Serializable]
@@ -91,4 +93,17 @@ public class Damage {
     public string id;
     public short ownerID;
     public int damage;
+}
+
+[Serializable]
+public class SyncPos {
+    public string id;
+    public short ownerID;
+    public float x;
+    public float z;
+}
+
+[Serializable]
+public class Batch {
+    public List<NetworkJSON> cmds;
 }

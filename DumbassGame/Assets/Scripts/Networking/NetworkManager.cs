@@ -19,6 +19,7 @@ public class NetworkManager : MonoBehaviour {
     public short networkID = 0;
 
     private StateManager state;
+    private List<NetworkJSON> batch;
 
     // Use this for initialization
     void Start() {
@@ -33,6 +34,7 @@ public class NetworkManager : MonoBehaviour {
         } else {
             Debug.Log("Failed to access webrtc ");
         }
+        batch = new List<NetworkJSON>();
     }
 
     public void OnInputEndEdit() {
@@ -141,7 +143,7 @@ public class NetworkManager : MonoBehaviour {
         SendString(JsonUtility.ToJson(netjson), true);
     }
 
-    public void SendMove(string name, float x, float z) {
+    public void SendMove(string name, float x, float z, bool toBatch = true) {
         Debug.Log("SENDING MOVE COMMAND");
         Move move = new Move {
             id = name,
@@ -155,11 +157,15 @@ public class NetworkManager : MonoBehaviour {
             type = NetTypes.MOVE_UNIT
         };
 
+        if(toBatch) {
+            batch.Add(netjson);
+        } else {
+            SendString(JsonUtility.ToJson(netjson), true);
+        }
         // send the new unit to connections
-        SendString(JsonUtility.ToJson(netjson), true);
     }
 
-    public void SendDamage(string name, int ID, int damage)
+    public void SendDamage(string name, int ID, int damage, bool toBatch = true)
     {
         if(state.isServer == false)
         {
@@ -178,11 +184,15 @@ public class NetworkManager : MonoBehaviour {
         };
 
         // send the new unit to connections
-        SendString(JsonUtility.ToJson(netjson), true);
+        if(toBatch) {
+            batch.Add(netjson);
+        } else {
+            SendString(JsonUtility.ToJson(netjson), true);
+        }
         HandleDamageUnit(d);
     }
 
-    public void SendStop(string name) {
+    public void SendStop(string name, bool toBatch = true) {
         Stop stop = new Stop {
             id = name,
             ownerID = networkID
@@ -193,10 +203,14 @@ public class NetworkManager : MonoBehaviour {
             type = NetTypes.STOP_UNIT
         };
 
-        SendString(JsonUtility.ToJson(netjson), true);
+        if(toBatch) {
+            batch.Add(netjson);
+        } else {
+            SendString(JsonUtility.ToJson(netjson), true);
+        }
     }
 
-    public void SendAttack(string name, float x, float z) {
+    public void SendAttack(string name, float x, float z, bool toBatch = true) {
         Attack attack = new Attack {
             id = name,
             ownerID = networkID,
@@ -209,7 +223,84 @@ public class NetworkManager : MonoBehaviour {
             type = NetTypes.ATTACK_UNIT
         };
 
+        if(toBatch) {
+            batch.Add(netjson);
+        } else {
+            SendString(JsonUtility.ToJson(netjson), true);
+        }
+    }
+
+    public void SendSyncPos(string name, short owner, float x, float z, bool toBatch = true) {
+        if(!state.isServer) {
+            return;
+        }
+        
+        SyncPos syncPos = new SyncPos  {
+            id = name,
+            ownerID = owner,
+            x = x,
+            z = z
+        };
+
+        NetworkJSON netjson = new NetworkJSON {
+            json = JsonUtility.ToJson(syncPos),
+            type = NetTypes.SYNC_POS
+        };
+        if(toBatch) {
+            batch.Add(netjson);
+        } else {
+            SendString(JsonUtility.ToJson(netjson), true);
+        }
+    }
+
+    /*
+    public void SubmitSync(string name, short owner, float x, float z) {
+        SyncPos syncPos = new SyncPos  {
+            id = name,
+            ownerID = owner,
+            x = x,
+            z = z
+        };
+
+        NetworkJSON netjson = new NetworkJSON {
+            json = JsonUtility.ToJson(syncPos),
+            type = NetTypes.SYNC_POS
+        };
+
+        batch.Add(netjson);
+    }
+    
+
+    public void SubmitMove(string name, float x, float z) {
+        Move move = new Move {
+            id = name,
+            ownerID = networkID,
+            x = x,
+            z = z
+        };
+
+        NetworkJSON netjson = new NetworkJSON {
+            json = JsonUtility.ToJson(move),
+            type = NetTypes.MOVE_UNIT
+        };
+
+        // send the new unit to connections
         SendString(JsonUtility.ToJson(netjson), true);
+    }
+    */
+
+    private void SendBatch() {
+        Batch cmdBatch = new Batch {
+            cmds = batch
+        };
+        
+        NetworkJSON netjson = new NetworkJSON {
+            json = JsonUtility.ToJson(cmdBatch),
+            type = NetTypes.BATCH
+        };
+
+        SendString(JsonUtility.ToJson(netjson), true);
+        batch.Clear();
     }
 
     private void HandleSync(SyncUnits su) {
@@ -263,7 +354,6 @@ public class NetworkManager : MonoBehaviour {
     }
 
     private void HandleMoveCommand(Move move) {
-        Debug.Log("HANDLING MOVE COMMAND");
         state.MoveCommand(move.ownerID, move.id, move.x, move.z);
     }
 
@@ -275,57 +365,87 @@ public class NetworkManager : MonoBehaviour {
         state.AttackCommand(attack.ownerID, attack.id, attack.x, attack.z);
     }
 
-    private void HandleDamageUnit(Damage damage)
-    {
+    private void HandleDamageUnit(Damage damage) {
         state.DamageUnit(damage.ownerID, damage.id, damage.damage);
+    }
+
+    private void HandleSyncPos(SyncPos syncPos) {
+        state.SyncPos(syncPos.ownerID, syncPos.id, syncPos.x, syncPos.z);
+    }
+
+    private void HandleBatch(Batch cmdBatch) {
+        foreach(NetworkJSON cmd in cmdBatch.cmds) {
+            delegateNetType(cmd);
+        }
     }
 
     private void HandleIncommingMessage(ref NetworkEvent evt) {
         short requestID = evt.ConnectionId.id;
         MessageDataBuffer buffer = (MessageDataBuffer)evt.MessageData;
         string msg = Encoding.UTF8.GetString(buffer.Buffer, 0, buffer.ContentLength);
+
         try {
             NetworkJSON netjson = JsonUtility.FromJson<NetworkJSON>(msg);
-            switch (netjson.type) {
-                case NetTypes.SYNC:
-                    SyncUnits su = JsonUtility.FromJson<SyncUnits>(netjson.json);
-                    HandleSync(su);
-                    break;
-                case NetTypes.ADD_UNIT:
-                    AddUnit au = JsonUtility.FromJson<AddUnit>(netjson.json);
-                    AddUnit.action(au.ownerID, au.unit);
-                    break;
-                case NetTypes.REQUEST_UNIT:
-                    Debug.Log("requested add unit from: " + requestID);
-                    RequestUnit ru = JsonUtility.FromJson<RequestUnit>(netjson.json);
-                    HandleRequestUnit(ru);
-                    break;
-                case NetTypes.MOVE_UNIT:
-                    Debug.Log("requested move unit from: " + requestID);
-                    Move move = JsonUtility.FromJson<Move>(netjson.json);
-                    HandleMoveCommand(move);
-                    break;
-                case NetTypes.STOP_UNIT:
-                    Stop stop = JsonUtility.FromJson<Stop>(netjson.json);
-                    HandleStopCommand(stop);
-                    break;
-                case NetTypes.ATTACK_UNIT:
-                    Attack attack = JsonUtility.FromJson<Attack>(netjson.json);
-                    HandleAttackCommand(attack);
-                    break;
-                case NetTypes.DAMAGE_UNIT:
-                    Damage damage = JsonUtility.FromJson<Damage>(netjson.json);
-                    HandleDamageUnit(damage);
-                    break;
-                default:
-                    Debug.Log("UNKNOWN TYPE: " + netjson.type);
-                    break;
+
+            if(netjson == null) {
+                Debug.Log("Json was null!");
             }
-        } catch (System.Exception e) {
-            Debug.Log(e.InnerException.ToString() + ": " + msg);
+            
+            delegateNetType(netjson);
+
+        } catch (System.NullReferenceException e) {
+            Debug.Log("Exception thrown: " + e.ToString());
+            if(msg != null)
+                Debug.Log(msg);
+            else
+                Debug.Log("A message was null :(");
         }
         //return the buffer so the network can reuse it
         buffer.Dispose();
+    }
+
+    private void delegateNetType(NetworkJSON netjson) {
+        switch (netjson.type) {
+            case NetTypes.SYNC:
+                SyncUnits su = JsonUtility.FromJson<SyncUnits>(netjson.json);
+                HandleSync(su);
+                break;
+            case NetTypes.ADD_UNIT:
+                AddUnit au = JsonUtility.FromJson<AddUnit>(netjson.json);
+                AddUnit.action(au.ownerID, au.unit);
+                break;
+            case NetTypes.REQUEST_UNIT:
+                RequestUnit ru = JsonUtility.FromJson<RequestUnit>(netjson.json);
+                HandleRequestUnit(ru);
+                break;
+            case NetTypes.MOVE_UNIT:
+                Move move = JsonUtility.FromJson<Move>(netjson.json);
+                HandleMoveCommand(move);
+                break;
+            case NetTypes.STOP_UNIT:
+                Stop stop = JsonUtility.FromJson<Stop>(netjson.json);
+                HandleStopCommand(stop);
+                break;
+            case NetTypes.ATTACK_UNIT:
+                Attack attack = JsonUtility.FromJson<Attack>(netjson.json);
+                HandleAttackCommand(attack);
+                break;
+            case NetTypes.DAMAGE_UNIT:
+                Damage damage = JsonUtility.FromJson<Damage>(netjson.json);
+                HandleDamageUnit(damage);
+                break;
+            case NetTypes.SYNC_POS:
+                SyncPos syncPos = JsonUtility.FromJson<SyncPos>(netjson.json);
+                HandleSyncPos(syncPos);
+                break;
+            case NetTypes.BATCH:
+                Batch cmdBatch = JsonUtility.FromJson<Batch>(netjson.json);
+                HandleBatch(cmdBatch);
+                break;
+            default:
+                Debug.Log("UNKNOWN TYPE: " + netjson.type);
+                break;
+        }
     }
 
     public void requestNewUnit(short unitType = 1)
@@ -352,6 +472,10 @@ public class NetworkManager : MonoBehaviour {
     private void FixedUpdate() {
         //check if the network was created
         if (mNetwork != null) {
+            //sync all units before processing events
+            Debug.Log("Sending Sync Batch: " + batch);
+            SendBatch();
+
             mNetwork.Update();
             NetworkEvent evt;
             while (mNetwork != null && mNetwork.Dequeue(out evt)) {

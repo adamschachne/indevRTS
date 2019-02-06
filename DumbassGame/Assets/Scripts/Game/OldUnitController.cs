@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class UnitController : MonoBehaviour {
+public class OldUnitController : MonoBehaviour {
     public Vector3 targetDirection;
     public float moveSpeed = 3.0f;
     public float rotateSpeed = 0.65f;
@@ -26,7 +26,12 @@ public class UnitController : MonoBehaviour {
         anim = GetComponent<AnimationController>();
         actions = GetComponent<ActionController>();
         agent = GetComponent<NavMeshAgent>();
-        agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+        if(state.isServer) {
+            agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+        } else {
+            agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+            agent.updatePosition = false;
+        }
 
         agent.destination = this.transform.position;
         rotateSpeed = rotateSpeed/60;
@@ -139,12 +144,11 @@ public class UnitController : MonoBehaviour {
                 }
             }
         }
-        
-        anim.SetMove(moving);
-        
-        if(state.isServer) {
-            state.network.SendSyncPos(this.name, short.Parse(this.transform.parent.name.Remove(0, 3)), this.transform.position.x, this.transform.position.z);
+
+        if(agent.obstacleAvoidanceType == ObstacleAvoidanceType.HighQualityObstacleAvoidance) {
+            CmdSyncPos();
         }
+        anim.SetMove(moving);
 
     }
 }

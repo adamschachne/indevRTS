@@ -41,6 +41,7 @@ public class StateManager : MonoBehaviour
     public bool inGame;
     [ReadOnly]
     public Dictionary<short, int> unitCounts; // map network id to count
+    private Dictionary<string, GameObject> unitLookup;
     private static StateManager s;
     [HideInInspector]
     public static StateManager state {
@@ -60,6 +61,7 @@ public class StateManager : MonoBehaviour
         gameView = View.Lobby;
         inGame = false;
         unitCounts = new Dictionary<short, int>();
+        unitLookup = new Dictionary<string, GameObject>();
 
         if (!guyPrefab) {
             throw new System.Exception("No Guy defined");
@@ -180,49 +182,80 @@ public class StateManager : MonoBehaviour
         } else {
             unit.name = name;
         }
+
+        unitLookup.Add(myUnits.name + unit.name, unit);
+
         return unit;
     }
 
     public void MoveCommand(short ownerID, string name, float x, float z) {
         GameObject units = GetNetUserGameUnits(ownerID);
-        foreach (Transform child in units.transform) {
-            if (child.name.Equals(name)) {
-                child.GetComponent<UnitController>().MoveTo(x, z);
-                return;
-            }
+        
+        GameObject unit;
+        if(unitLookup.TryGetValue(units.name+name, out unit))
+        {
+            unit.GetComponent<UnitController>().MoveTo(x, z);
+        }
+        else
+        {
+            Debug.Log("Unit with name: " + units.name+name + " was not found!");
         }
     }
 
     public void StopCommand(short ownerID, string name)
     {
         GameObject units = GetNetUserGameUnits(ownerID);
-        foreach(Transform child in units.transform) {
-            if(child.name.Equals(name)) {
-                child.GetComponent<UnitController>().Stop();
-                return;
-            }
+        GameObject unit;
+        if(unitLookup.TryGetValue(units.name+name, out unit))
+        {
+            unit.GetComponent<UnitController>().Stop();
+        }
+        else
+        {
+            Debug.Log("Unit with name: " + units.name+name + " was not found!");
         }
     }
 
     public void AttackCommand(short ownerID, string name, float x, float z)
     {
         GameObject units = GetNetUserGameUnits(ownerID);
-        foreach(Transform child in units.transform) {
-            if(child.name.Equals(name)) {
-                child.GetComponent<UnitController>().Attack(x, z);
-                return;
-            }
+        GameObject unit;
+        if(unitLookup.TryGetValue(units.name+name, out unit))
+        {
+            unit.GetComponent<UnitController>().Attack(x, z);
+        }
+        else
+        {
+            Debug.Log("Unit with name: " + units.name+name + " was not found!");
         }
     }
 
     public void DamageUnit(short ownerID, string name, int damage)
     {
         GameObject units = GetNetUserGameUnits(ownerID);
-        foreach(Transform child in units.transform) {
-            if(child.name.Equals(name)) {
-                child.GetComponent<UnitController>().TakeDamage(damage);
-                return;
-            }
+        GameObject unit;
+        if(unitLookup.TryGetValue(units.name+name, out unit))
+        {
+            unit.GetComponent<UnitController>().TakeDamage(damage);
+        }
+        else
+        {
+            Debug.Log("Unit with name: " + units.name+name + " was not found!");
+        }
+
+    }
+
+    public void SyncPos(short ownerID, string name, float x, float z) {
+        GameObject units = GetNetUserGameUnits(ownerID);
+        GameObject unit;
+        if(unitLookup.TryGetValue(units.name+name, out unit))
+        {
+            //Debug.Log("Trying to sync unit: " + units.name+name);
+            unit.GetComponent<UnitController>().SyncPos(x, z);
+        }
+        else
+        {
+            Debug.Log("Unit with name: " + units.name+name + " was not found!");
         }
     }
 
@@ -250,9 +283,16 @@ public class StateManager : MonoBehaviour
         gameUnits.name = "GameUnits";
     }
 
+    public void RemoveUnit(GameObject unit)
+    {
+        if(!unitLookup.Remove(unit.transform.parent.name + unit.name))
+            Debug.Log("Could not remove unit with name " + unit.transform.parent.name + unit.name + ".");
+    }
+
     public void CleanObjects() {
-        Destroy(gameUnits);
         gameUnits.transform.SetParent(null);
+        Destroy(gameUnits);
+        unitLookup.Clear();
     }
 
     public void OpenMenu(bool open)
