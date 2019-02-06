@@ -141,6 +141,10 @@ public class UnitController : MonoBehaviour {
         }
         
         anim.SetMove(moving);
+        
+        if(state.isServer) {
+            state.network.SendSyncPos(this.name, short.Parse(this.transform.parent.name.Remove(0, 3)), this.transform.position.x, this.transform.position.z);
+        }
 
     }
 }
