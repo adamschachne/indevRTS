@@ -268,4 +268,43 @@ public class InputManager : MonoBehaviour
                 a.Execute();
         }
     }
+
+    public List<ActionType> getTaggedActions(String tag, Type actionType) {
+        if(actionTypes.Contains(actionType)) {
+            List<ActionType> taggedActions = new List<ActionType>();
+            foreach(ActionType action in (ActionType[])actionType.GetField("actions", BindingFlags.Public | BindingFlags.Static).GetValue(null)) {
+                if(action.name.Contains(tag)) {
+                    taggedActions.Add(action);
+                }
+            }
+            return taggedActions;
+        } else {
+            Debug.Log("Please call getTaggedActions on a valid type that inherits from ActionType");
+            return null;
+        }
+    }
+
+    /*
+    public ModKey getInputFromAction(ActionType action) {
+        if(action.group != "NONE") {
+            Debug.Log("Don't call getInputFromAction on grouped actions.");
+            return null;
+        }
+
+        Dictionary<ModKey, List<ActionType>> map = keyMap[(int)state.gameView];
+        List<ActionType> actionGroup = null;
+        foreach(List<ActionType> group in groups[(int)state.gameView]) {
+            if(group[0] == action) {
+                actionGroup = group;
+            }
+        }
+
+        if(actionGroup == null) {
+            Debug.Log("Could not find group associated with action: " + action.ToString());
+            return null;
+        } else {
+            return actionGroup[0].currentKey;
+        }
+    }
+    */
 }

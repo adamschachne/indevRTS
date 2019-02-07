@@ -7,6 +7,8 @@ public class Selection : MonoBehaviour {
 
     public GameObject SelectionCircle;
     HashSet<GameObject> selectedUnits;
+    HashSet<GameObject>[] controlGroups;
+    List<ActionType> controlGroupTypes;
     bool leftClickHeld;
     bool attacking;
     enum Mode { None, Remove, Add };
@@ -16,8 +18,6 @@ public class Selection : MonoBehaviour {
     public LayerMask movementLayerMask;
     const float MIN_LENGTH = 0.0005f;
     private StateManager state;
-
-    
 
     // Use this for initialization
     void Start() {
@@ -29,7 +29,16 @@ public class Selection : MonoBehaviour {
         state.input.Subscribe(Move, RTS.MOVE);
         state.input.Subscribe(Stop, RTS.STOP);
         state.input.Subscribe(ToggleAttackOn, RTS.ATTACK);
+        state.input.Subscribe(ControlGroup, RTS.CONTROL_GROUP_1);
+
+        controlGroupTypes = state.input.getTaggedActions("Control Group", typeof(RTS));
         attacking = false;
+
+        controlGroups = new HashSet<GameObject>[controlGroupTypes.Count];
+        for(int i = 0; i < controlGroups.Length; ++i) {
+            controlGroups[i] = new HashSet<GameObject>();
+            state.input.Subscribe(ControlGroup, controlGroupTypes[i]);
+        }
     }
 
     private void OnEnable() {
@@ -164,6 +173,13 @@ public class Selection : MonoBehaviour {
             viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderBack));
     }
 
+    public void CleanupSelection(GameObject target) {
+        RemoveSelection(target);
+        foreach(HashSet<GameObject> group in controlGroups) {
+            group.Remove(target);
+        }
+    }
+
     public void RemoveSelection(GameObject target) {
         bool selectedIndex = this.selectedUnits.Contains(target);
         if (selectedIndex) {
@@ -177,11 +193,9 @@ public class Selection : MonoBehaviour {
         }
     }
 
-    void DeselectAll() {
+    private void DeselectAll() {
         //Debug.Log("Deselect All");
         foreach (GameObject unit in this.selectedUnits) {
-            if(unit == null)
-                continue;
 
             Selectable selected = unit.GetComponent<Selectable>();
             if (selected.selectionCircle != null) {
@@ -194,7 +208,7 @@ public class Selection : MonoBehaviour {
         this.selectedUnits.Clear();
     }
 
-    void AddSelection(GameObject target) {
+    private void AddSelection(GameObject target) {
         this.selectedUnits.Add(target);
         //target.GetComponent<Outline>().OutlineWidth = 6.0f;
         Selectable selected = target.GetComponent<Selectable>();
@@ -322,6 +336,30 @@ public class Selection : MonoBehaviour {
             }
         }
         leftClickHeld = false;
+    }
+
+    private void ControlGroup() {
+        for (int i = 0; i < controlGroupTypes.Count; ++i) {
+            if(Input.GetKey(controlGroupTypes[i].currentKey.key)) {
+                //assigning a control group
+                if(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)
+                || Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)
+                || Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
+                {
+                    controlGroups[i].Clear();
+                    controlGroups[i] = new HashSet<GameObject>(selectedUnits);
+                }
+                //select our control group
+                else {
+                    if(controlGroups[i].Count != 0) {
+                        DeselectAll();
+                        foreach(GameObject unit in controlGroups[i]) {
+                            AddSelection(unit);
+                        }
+                    } 
+                }
+            }
+        }
     }
 }
 

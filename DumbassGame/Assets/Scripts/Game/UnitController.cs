@@ -77,7 +77,7 @@ public class UnitController : MonoBehaviour {
         actions.CancelAttack();
         state.RemoveUnit(this.gameObject);
         this.transform.parent = null;
-        state.selection.RemoveSelection(this.gameObject);
+        state.selection.CleanupSelection(this.gameObject);
         Destroy(this.gameObject);
     }
 

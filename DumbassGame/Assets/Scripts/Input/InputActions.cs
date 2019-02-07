@@ -91,8 +91,8 @@ namespace InputActions {
 		//Index is what the data structures in the InputManager will use to find an Action in its list of arrays. Please make it a unique, sequential number.
 		protected readonly int index;
 
-		//Name is used for debug purposes and for easy checking when things go wrong in an action call. It is not used in logic anywhere
-		protected readonly string name;
+		//Name can be used as a tag to check whether an action is of a particular type. Use getTaggedActions() in the inputmanager to do so
+		public readonly string name;
 
 		//Group is an optional parameter. You can define an Action as in a particular group, and then the GetActionGroups will assemble those Actions into groups 
 		//The group is a string, and the strings of everything in a group should be identical. This string is used as the name of the keybind.
@@ -218,13 +218,20 @@ namespace InputActions {
 		public static readonly RTS SELECT_UP = new RTS(1, "SELECT_UP", new ModKey(KeyCode.Mouse0), "Select",  InputType.Up, true);
 		public static readonly RTS MOVE = new RTS(2, "Move", new ModKey(KeyCode.Mouse1));
 		public static readonly RTS STOP = new RTS(3, "Stop", new ModKey(KeyCode.S));
-		public static readonly RTS SPAWN_SHOOTGUY = new RTS(4, "Spawn Soldier", new ModKey(KeyCode.Alpha1));
-
-		public static readonly RTS SPAWN_IRONFOE = new RTS(5, "Spawn Ironfoe", new ModKey(KeyCode.Alpha2));
+		public static readonly RTS SPAWN_SHOOTGUY = new RTS(4, "Spawn Soldier", new ModKey(KeyCode.Q));
+		public static readonly RTS SPAWN_IRONFOE = new RTS(5, "Spawn Ironfoe", new ModKey(KeyCode.W));
 		public static readonly RTS ATTACK = new RTS(6, "Attack", new ModKey(KeyCode.A));
+		public static readonly RTS CONTROL_GROUP_1 = new RTS(7, "Control Group 1", new ModKey(KeyCode.Alpha1), "NONE", InputType.Down, true);
+		public static readonly RTS CONTROL_GROUP_2 = new RTS(8, "Control Group 2", new ModKey(KeyCode.Alpha2), "NONE", InputType.Down, true);
+		public static readonly RTS CONTROL_GROUP_3 = new RTS(9, "Control Group 3", new ModKey(KeyCode.Alpha3), "NONE", InputType.Down, true);
+		public static readonly RTS CONTROL_GROUP_4 = new RTS(10, "Control Group 4", new ModKey(KeyCode.Alpha4), "NONE", InputType.Down, true);
+		public static readonly RTS CONTROL_GROUP_5 = new RTS(11, "Control Group 5", new ModKey(KeyCode.Alpha5), "NONE", InputType.Down, true);
+		public static readonly RTS CONTROL_GROUP_6 = new RTS(12, "Control Group 6", new ModKey(KeyCode.Alpha6), "NONE", InputType.Down, true);
+
 		//this variable MUST be named actions
 		//put the const values into the array in the same order you initalized them
-		public static ActionType[] actions = new ActionType[]{SELECT_DOWN, SELECT_UP, MOVE, STOP, SPAWN_SHOOTGUY, SPAWN_IRONFOE, ATTACK};
+		public static ActionType[] actions = new ActionType[]{SELECT_DOWN, SELECT_UP, MOVE, STOP, SPAWN_SHOOTGUY, SPAWN_IRONFOE, ATTACK,
+		CONTROL_GROUP_1, CONTROL_GROUP_2, CONTROL_GROUP_3, CONTROL_GROUP_4, CONTROL_GROUP_5, CONTROL_GROUP_6};
 		//this variable MUST be named view
 		public static readonly StateManager.View view = StateManager.View.RTS;
 
