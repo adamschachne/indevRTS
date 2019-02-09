@@ -180,28 +180,24 @@ public class Selection : MonoBehaviour {
         }
     }
 
-    public void RemoveSelection(GameObject target) {
+    public void RemoveSelection(GameObject target, bool removeFromList = true) {
         bool selectedIndex = this.selectedUnits.Contains(target);
         if (selectedIndex) {
             //target.GetComponent<Outline>().OutlineWidth = 0.0f;
             Selectable selected = target.GetComponent<Selectable>();
-            if (selected.selectionCircle != null) {
-                Destroy(selected.selectionCircle.gameObject);
-                selected.selectionCircle = null;
+            if (selected.selectionCircle.activeSelf) {
+                selected.selectionCircle.SetActive(false);
             }
-            this.selectedUnits.Remove(target);
+            if(removeFromList) {
+                this.selectedUnits.Remove(target);
+            }
         }
     }
 
     private void DeselectAll() {
         //Debug.Log("Deselect All");
         foreach (GameObject unit in this.selectedUnits) {
-
-            Selectable selected = unit.GetComponent<Selectable>();
-            if (selected.selectionCircle != null) {
-                Destroy(selected.selectionCircle.gameObject);
-                selected.selectionCircle = null;
-            }            
+            RemoveSelection(unit, false);
         }
 
         // clear selected array
@@ -212,10 +208,7 @@ public class Selection : MonoBehaviour {
         this.selectedUnits.Add(target);
         //target.GetComponent<Outline>().OutlineWidth = 6.0f;
         Selectable selected = target.GetComponent<Selectable>();
-        if (selected.selectionCircle == null) {
-            selected.selectionCircle = Instantiate(SelectionCircle);
-            selected.selectionCircle.transform.SetParent(selected.transform, false);
-        }
+        selected.selectionCircle.SetActive(true);
 
         // add to selected list
         this.selectedUnits.Add(target);

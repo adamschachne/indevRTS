@@ -334,8 +334,7 @@ public class NetworkManager : MonoBehaviour {
         short netID = ru.ownerID;
         short unitType = ru.unitType;
         GameObject unit = state.addUnit(netID, null, unitType);
-        Vector3 deltaPos = new Vector3(Random.Range(-3, 3), 0, Random.Range(-3, 3));
-        unit.transform.position += deltaPos;
+        unit.transform.position = new Vector3(ru.x, unit.transform.position.y ,ru.z);
 
         AddUnit addUnit = new AddUnit();
         addUnit.ownerID = netID;
@@ -390,7 +389,6 @@ public class NetworkManager : MonoBehaviour {
             if(netjson == null) {
                 Debug.Log("Json was null!");
             }
-            
             delegateNetType(netjson);
 
         } catch (System.NullReferenceException e) {
@@ -448,13 +446,15 @@ public class NetworkManager : MonoBehaviour {
         }
     }
 
-    public void requestNewUnit(short unitType = 1)
+    public void requestNewUnit(short unitType, float x, float z)
     {
         if(state.isServer)
         {
             RequestUnit req = new RequestUnit();
             req.ownerID = networkID;
             req.unitType = unitType;
+            req.x = x;
+            req.z = z;
             HandleRequestUnit(req);
         }
         else
@@ -462,6 +462,8 @@ public class NetworkManager : MonoBehaviour {
             RequestUnit req = new RequestUnit();
             req.ownerID = networkID;
             req.unitType = unitType;
+            req.x = x;
+            req.z = z;
             NetworkJSON netjson = new NetworkJSON();
             netjson.json = JsonUtility.ToJson(req);
             netjson.type = NetTypes.REQUEST_UNIT;
@@ -518,7 +520,7 @@ public class NetworkManager : MonoBehaviour {
                                 Debug.Log("starting game");
                                 state.StartGame();
                             }
-                            requestNewUnit();
+                            requestNewUnit(0, 8, 8);
                         }                        
                         break;
                     case NetEventType.ConnectionFailed:

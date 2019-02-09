@@ -64,6 +64,8 @@ public class AddUnit {
 public class RequestUnit {
     public short ownerID; // the connection that requested a unit
     public short unitType;
+    public float x;
+    public float z;
 }
 
 [Serializable]

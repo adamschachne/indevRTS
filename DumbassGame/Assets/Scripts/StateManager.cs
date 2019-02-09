@@ -25,6 +25,7 @@ public class StateManager : MonoBehaviour
     [ReadOnly]
     public InputManager input;
     [Header("Prefabs")]
+    public GameObject barracks;
     public GameObject guyPrefab;
     public GameObject ironfoePrefab;
     public GameObject gameUnitsPrefab;
@@ -109,11 +110,7 @@ public class StateManager : MonoBehaviour
         CreateTopLevelGameUnits();
         inGame = true;
         if (isServer) {
-            // initialize idk TODO
-            GameObject guy = addUnit(0);
-            Vector3 pos = new Vector3(Random.Range(-3, 3), 0, Random.Range(-3, 3));
-            guy.transform.position += pos;
-
+            network.requestNewUnit(0, -8, 8);
         }       
 
         if(gameView == View.Global)
@@ -126,10 +123,10 @@ public class StateManager : MonoBehaviour
     }
 
     private void SpawnShootGuy() {
-        network.requestNewUnit(1);
+        network.requestNewUnit(1, Random.Range(-3, 3), Random.Range(-3, 3));
     }
     private void SpawnIronfoe() {
-        network.requestNewUnit(2);
+        network.requestNewUnit(2, Random.Range(-3, 3), Random.Range(-3, 3));
     }
 
     private GameObject GetNetUserGameUnits(short netID) {
@@ -163,6 +160,10 @@ public class StateManager : MonoBehaviour
         GameObject unit;
         switch(unitType)
         {
+            case 0:
+            unit = Instantiate(barracks, myUnits.transform);
+            break;
+
             case 1:
             unit = Instantiate(guyPrefab, myUnits.transform);
             break;

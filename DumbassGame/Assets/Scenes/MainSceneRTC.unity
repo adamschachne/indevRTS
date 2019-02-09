@@ -609,6 +609,8 @@ MonoBehaviour:
   network: {fileID: 0}
   gui: {fileID: 0}
   input: {fileID: 0}
+  barracks: {fileID: 3583649595493651763, guid: 7fc92ace1eecf1d46954c6c5ada37616,
+    type: 3}
   guyPrefab: {fileID: 1149543786897998, guid: 3a39b8ffb476d734492377a3cab99f01, type: 3}
   ironfoePrefab: {fileID: 1519855637533724, guid: ed085ae3e3055e24a8e82124f91d9170,
     type: 3}
