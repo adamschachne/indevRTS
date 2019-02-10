@@ -70,6 +70,11 @@ public class GuiManager : MonoBehaviour {
                 buttonScript.Init(group);
                 keyButtonTransform.position = new Vector3(xPos, yPos, 0);
                 yPos -= (int)(buttonSize.rect.height * canvas.scaleFactor * 1.5);
+
+                if(yPos < buttonSize.rect.height * canvas.scaleFactor * 1.5) {
+                    xPos += (int)(buttonSize.rect.width * canvas.scaleFactor * 1.2);
+                    yPos = (int)(Screen.height*0.85);
+                }
             }
         }
     }
