@@ -103,10 +103,7 @@ public class Selection : MonoBehaviour {
         }
     }
 
-    public bool IsWithinSelectionBoundsVolume(GameObject gameObject) {
-        if (!leftClickHeld)
-            return false;
-
+    public List<GameObject> withinSelectionBounds(Selectable[] selObjects) {
         var rect = Utils.GetScreenRect(mousePositionInitial, Input.mousePosition);
         //Bounds viewportBounds = Utils.GetViewportBounds(Camera.main, mousePositionInitial, Input.mousePosition);
 
@@ -138,39 +135,16 @@ public class Selection : MonoBehaviour {
         selectionVolumePlanes[3] = new Plane(camera.transform.position, selFrustumCorners[2], selFrustumCorners[3]);
         selectionVolumePlanes[4] = new Plane(camera.transform.position, selFrustumCorners[3], selFrustumCorners[0]);
 
-        return GeometryUtility.TestPlanesAABB(selectionVolumePlanes, gameObject.GetComponent<Collider>().bounds);
+        List<GameObject> objectsWithinBounds = new List<GameObject>();
+
+        foreach (Selectable so in selObjects) {
+            if(GeometryUtility.TestPlanesAABB(selectionVolumePlanes, so.gameObject.GetComponent<Collider>().bounds)) {
+                objectsWithinBounds.Add(so.gameObject);
+            }
+        }
+
+        return objectsWithinBounds;
         // return viewportBounds.Contains(Camera.main.WorldToViewportPoint(gameObject.transform.position));
-    }
-
-    // Tries several points for the Collider -- only capsule for now TODO
-    public bool IsWithinSelectionBoundsPoints(GameObject gameObject) {
-        if (!leftClickHeld)
-            return false;
-
-        CapsuleCollider collider = gameObject.GetComponent<CapsuleCollider>();
-        Vector3 colliderCenter = collider.center + gameObject.transform.position;
-        float radius = collider.radius;
-        float height = collider.height;
-
-        
-        Vector3 colliderTop = colliderCenter + new Vector3(0.0f, height / 2, 0.0f);
-        Vector3 colliderBot = colliderCenter - new Vector3(0.0f, height / 2, 0.0f);
-        Vector3 colliderRight = colliderCenter + new Vector3(radius, 0.0f, 0.0f);
-        Vector3 colliderLeft = colliderCenter - new Vector3(radius, 0.0f, 0.0f);
-        Vector3 colliderFront = colliderCenter + new Vector3(0.0f, 0.0f, radius);
-        Vector3 colliderBack = colliderCenter - new Vector3(0.0f, 0.0f, radius);
-        
-
-        Bounds viewportBounds = Utils.GetViewportBounds(Camera.main, mousePositionInitial, Input.mousePosition);
-
-        return 
-            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderCenter)) ||
-            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderTop)) ||
-            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderBot)) ||
-            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderRight)) ||
-            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderLeft)) ||
-            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderFront)) ||
-            viewportBounds.Contains(Camera.main.WorldToViewportPoint(colliderBack));
     }
 
     public void CleanupSelection(GameObject target) {
@@ -212,14 +186,6 @@ public class Selection : MonoBehaviour {
 
         // add to selected list
         this.selectedUnits.Add(target);
-    }
-
-    private void SelectDown() {
-        if(!attacking) {
-            leftClickHeld = true;
-            mousePositionInitial = Input.mousePosition;
-        }
-        
     }
 
     private void Move() {
@@ -269,18 +235,12 @@ public class Selection : MonoBehaviour {
         }
     }
 
-    private void Move(int ownerId, HashSet<int> units) {
-        RaycastHit hitInfo = new RaycastHit();
-
-        if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
-            GameObject obj = hitInfo.transform.gameObject;
-
-            if (obj.layer == LayerMask.NameToLayer("Ground")) {
-                foreach (GameObject unit in selectedUnits) {
-                    unit.GetComponent<UnitController>().CmdMoveTo(hitInfo.point);
-                }
-            }
+    private void SelectDown() {
+        if(!attacking) {
+            leftClickHeld = true;
+            mousePositionInitial = Input.mousePosition;
         }
+        
     }
 
     private void SelectUp() {
@@ -316,15 +276,16 @@ public class Selection : MonoBehaviour {
             if (this.selectionMode == Mode.None) {
                 this.DeselectAll();
             }
-            foreach (Selectable selectableObject in FindObjectsOfType<Selectable>()) {
+            foreach (GameObject obj in withinSelectionBounds(FindObjectsOfType<Selectable>())) {
+                //exclude buildings from box-select
+                if(obj.GetComponent<UnitController>() is BuildingController) {
+                    continue;
+                }
 
-                GameObject obj = selectableObject.gameObject;
-                if (this.IsWithinSelectionBoundsVolume(obj)) {
-                    if (this.selectionMode == Mode.Remove) {
-                        RemoveSelection(obj);
-                    } else {
-                        AddSelection(obj);
-                    }
+                if (this.selectionMode == Mode.Remove) {
+                    RemoveSelection(obj);
+                } else {
+                    AddSelection(obj);
                 }
             }
         }
