@@ -122,16 +122,32 @@ public class NetworkManager : MonoBehaviour {
 
         // add all existing units to the list
         foreach (Transform gameUnits in state.gameUnits.transform) {
-            // get all the units in this GO
-            foreach (Transform unit in gameUnits) {
-                var networkUnit = new NetworkUnit();
-                short ownerID = short.Parse(gameUnits.name.Split('-')[1]);
-                networkUnit.ownerID = ownerID;
-                networkUnit.id = unit.name;
-                networkUnit.x = unit.position.x;
-                networkUnit.z = unit.position.z;
-                netUnits.Add(networkUnit);
-            }           
+            if(gameUnits.name.Split('-')[0].Equals("GU")) {
+                // get all the units in this GO
+                foreach (Transform unit in gameUnits) {
+                    var networkUnit = new NetworkUnit();
+                    short ownerID = short.Parse(gameUnits.name.Split('-')[1]);
+                    networkUnit.ownerID = ownerID;
+                    networkUnit.id = unit.name;
+                    networkUnit.unitType = unit.gameObject.GetComponent<UnitController>().type;
+                    networkUnit.x = unit.position.x;
+                    networkUnit.z = unit.position.z;
+                    netUnits.Add(networkUnit);
+                }   
+            } else if (gameUnits.name.Split('-')[0].Equals("IO")) {
+                foreach (Transform unit in gameUnits) {
+                    if(unit.gameObject.GetComponent<FlagActions>() == null) {
+                        var networkUnit = new NetworkUnit();
+                        short ownerID = short.Parse(gameUnits.name.Split('-')[1]);
+                        networkUnit.ownerID = ownerID;
+                        networkUnit.id = unit.name;
+                        networkUnit.unitType = unit.gameObject.GetComponent<Interactable>().type;
+                        networkUnit.x = unit.position.x;
+                        networkUnit.z = unit.position.z;
+                        netUnits.Add(networkUnit);
+                    }
+                }
+            }     
         }
 
         syncData.units = netUnits;
@@ -316,7 +332,7 @@ public class NetworkManager : MonoBehaviour {
 
         foreach (NetworkUnit netUnit in su.units) {          
             short ownerID = netUnit.ownerID;
-            GameObject unit = state.addUnit(ownerID, netUnit.id, netUnit.unitType);
+            GameObject unit = state.addUnit(ownerID, netUnit.unitType, netUnit.id);
             unit.transform.SetPositionAndRotation(new Vector3(netUnit.x, unit.transform.position.y, netUnit.z), unit.transform.rotation);
         }
     }
@@ -332,8 +348,8 @@ public class NetworkManager : MonoBehaviour {
         // if they cant, do nothing
         // if they can, make a unit and send an addUnit message out
         short netID = ru.ownerID;
-        short unitType = ru.unitType;
-        GameObject unit = state.addUnit(netID, null, unitType);
+        StateManager.EntityType unitType = ru.unitType;
+        GameObject unit = state.addUnit(netID, unitType, null);
         unit.transform.position = new Vector3(ru.x, unit.transform.position.y ,ru.z);
 
         AddUnit addUnit = new AddUnit();
@@ -446,7 +462,7 @@ public class NetworkManager : MonoBehaviour {
         }
     }
 
-    public void requestNewUnit(short unitType, float x, float z)
+    public void requestNewUnit(StateManager.EntityType unitType, float x, float z)
     {
         if(state.isServer)
         {
@@ -520,7 +536,6 @@ public class NetworkManager : MonoBehaviour {
                                 Debug.Log("starting game");
                                 state.StartGame();
                             }
-                            requestNewUnit(0, 8, 8);
                         }                        
                         break;
                     case NetEventType.ConnectionFailed:

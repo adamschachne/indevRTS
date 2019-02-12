@@ -53,4 +53,8 @@ public class SoldierActions : ActionController {
 		CancelAttack();
 	}
 
+	public void CarryFlag(GameObject flag) {
+		flag.transform.SetParent(this.transform, false);
+	}
+
 }

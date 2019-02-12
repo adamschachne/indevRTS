@@ -442,6 +442,7 @@ MonoBehaviour:
   moveSpeed: 3
   rotateSpeed: 0.65
   health: 20
+  type: 1
 --- !u!114 &114756485798347194
 MonoBehaviour:
   m_ObjectHideFlags: 0

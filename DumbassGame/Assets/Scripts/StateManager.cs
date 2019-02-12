@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 // Maintains simple-to-access state variables
 public class StateManager : MonoBehaviour 
@@ -13,6 +14,15 @@ public class StateManager : MonoBehaviour
         Lobby = 1,
         RTS = 2, 
 
+    }
+
+    [Serializable]
+    public enum EntityType {
+        Soldier,
+        Ironfoe,
+        Barracks,
+        FlagPlatform,
+        Flag
     }
 
     [Header("Network")]
@@ -29,6 +39,7 @@ public class StateManager : MonoBehaviour
     public GameObject guyPrefab;
     public GameObject ironfoePrefab;
     public GameObject gameUnitsPrefab;
+    public GameObject flagPlatformPrefab;
     [ReadOnly]
     public GameObject gameUnits;
     [ReadOnly]
@@ -109,9 +120,16 @@ public class StateManager : MonoBehaviour
     public void StartGame() {        
         CreateTopLevelGameUnits();
         inGame = true;
+
+        //start of game unit spawns go here
         if (isServer) {
-            network.requestNewUnit(0, -8, 8);
-        }       
+            network.requestNewUnit(EntityType.FlagPlatform, 8, 8);
+            //network.requestNewUnit(0, -8, 8);
+        } else {
+            //spawn client building
+            network.requestNewUnit(EntityType.FlagPlatform, -8, 8);
+            //network.requestNewUnit(0, 8, 8);
+        } 
 
         if(gameView == View.Global)
             gui.Menu();
@@ -123,14 +141,26 @@ public class StateManager : MonoBehaviour
     }
 
     private void SpawnShootGuy() {
-        network.requestNewUnit(1, Random.Range(-3, 3), Random.Range(-3, 3));
+        network.requestNewUnit(EntityType.Soldier, UnityEngine.Random.Range(-3, 3), UnityEngine.Random.Range(-3, 3));
     }
     private void SpawnIronfoe() {
-        network.requestNewUnit(2, Random.Range(-3, 3), Random.Range(-3, 3));
+        network.requestNewUnit(EntityType.Ironfoe, UnityEngine.Random.Range(-3, 3), UnityEngine.Random.Range(-3, 3));
     }
 
     private GameObject GetNetUserGameUnits(short netID) {
         string myGameUnitsName = "GU-" + netID;
+        foreach (var child in gameUnits.GetComponentsInChildren<Transform>()) {
+            if (child.name.Equals(myGameUnitsName)) {
+                return child.gameObject;
+            }
+        }
+        GameObject newGameUnits = Instantiate(gameUnitsPrefab, gameUnits.transform);
+        newGameUnits.name = myGameUnitsName;
+        return newGameUnits;
+    }
+
+    private GameObject GetNetUserInteractableObjects(short netID) {
+        string myGameUnitsName = "IO-" + netID;
         foreach (var child in gameUnits.GetComponentsInChildren<Transform>()) {
             if (child.name.Equals(myGameUnitsName)) {
                 return child.gameObject;
@@ -153,24 +183,32 @@ public class StateManager : MonoBehaviour
         return count + 1;
     }
 
-    public GameObject addUnit(short netID, string name = null, short unitType = 1) {
+    public GameObject addUnit(short netID, EntityType unitType, string name = null) {
         // get my game units
         GameObject myUnits = GetNetUserGameUnits(netID);
         // create a fucking guy in the gameUnits
         GameObject unit;
         switch(unitType)
         {
-            case 0:
+            case EntityType.Barracks:
             unit = Instantiate(barracks, myUnits.transform);
             break;
 
-            case 1:
+            case EntityType.Soldier:
             unit = Instantiate(guyPrefab, myUnits.transform);
             break;
 
-            case 2:
+            case EntityType.Ironfoe:
             unit = Instantiate(ironfoePrefab, myUnits.transform);
             break;
+
+            case EntityType.FlagPlatform:
+            unit = Instantiate(flagPlatformPrefab, GetNetUserInteractableObjects(netID).transform);
+            return unit;
+
+            case EntityType.Flag:
+            Debug.Log("Tried to spawn a flag through addUnit");
+            return null;
 
             default:
             unit = Instantiate(guyPrefab, myUnits.transform);

@@ -20,6 +20,7 @@ public class UnitController : MonoBehaviour {
     protected AnimationController anim;
     protected ActionController actions;
     private NavMeshAgent agent;
+    public StateManager.EntityType type;
 
     // Use this for initialization
     void Start () {
