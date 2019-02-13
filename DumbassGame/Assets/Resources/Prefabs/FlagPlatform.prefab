@@ -121,3 +121,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   flagPrefab: {fileID: 2534213222364056252, guid: 4cf4dee0cad6b2b42ae7873e19f21b60,
     type: 3}
+  platformRenderer: {fileID: 8923684135341897605}
