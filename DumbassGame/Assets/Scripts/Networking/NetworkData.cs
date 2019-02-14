@@ -1,7 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
 
 public class NetTypes {
     public const string SYNC = "SYNC"; // list containing all current units in the game; this should not be sent often
@@ -50,13 +50,12 @@ public class AddUnit {
 
     [NonSerialized]
     public static Action<short, NetworkUnit> action = (short netId, NetworkUnit netunit) => {
-        Debug.Log("HANDLING ADD UNIT");
+        Debug.Log ("HANDLING ADD UNIT");
         // Client Only
         if (StateManager.state.isServer == true) {
             return;
         }
-        GameObject unit = StateManager.state.addUnit(netId, netunit.unitType, netunit.id);
-        unit.transform.SetPositionAndRotation(new Vector3(netunit.x, unit.transform.position.y, netunit.z), unit.transform.rotation);
+        GameObject unit = StateManager.state.addUnit (netId, netunit.unitType, new Vector2 (netunit.x, netunit.z), netunit.id);
     };
 }
 

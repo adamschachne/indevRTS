@@ -12,19 +12,14 @@ public class FlagPlatformActions : InteractableActions {
     [SerializeField]
     private MeshRenderer platformRenderer;
     // Start is called before the first frame update
-    void Start () {
+    void Awake () {
         string parentName = transform.parent.gameObject.name;
-        netID = short.Parse (parentName.Remove (0, 3));
         flagPos = new Vector3 (this.transform.position.x, flagPrefab.transform.position.y, this.transform.position.z);
         flag = Instantiate (flagPrefab, flagPos, flagPrefab.transform.rotation, this.transform.parent);
         flag.GetComponent<FlagActions> ().setHome (this.gameObject);
         flagIsHome = true;
+        netID = short.Parse (parentName.Remove (0, 3));
         platformRenderer.material.color = GuiManager.GetColorByNetID (netID);
-    }
-
-    // Update is called once per frame
-    void Update () {
-
     }
 
     //ToDo: If soldier is standing on platform and flag is returned, point is not scored
@@ -35,7 +30,7 @@ public class FlagPlatformActions : InteractableActions {
         if ((flag = other.gameObject.GetComponent<FlagActions> ()) != null &&
             flag.getNetID () != netID && flagIsHome) {
             //score a point
-            StateManager.state.ScorePoint ();
+            StateManager.state.ScorePoint (netID);
             //return the opponent's flag
             flag.returnFlag ();
         }

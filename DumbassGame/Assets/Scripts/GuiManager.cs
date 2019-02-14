@@ -8,10 +8,16 @@ public class GuiManager : MonoBehaviour {
 
     public Canvas canvas;
     public GameObject menu;
-    public GameObject KeyButtonPrefab;
-    public GameObject joinButton;
-    public GameObject createButton;
-    public GameObject disconnectButton;
+    [SerializeField]
+    private GameObject KeyButtonPrefab;
+    [SerializeField]
+    private GameObject joinButton;
+    [SerializeField]
+    private GameObject createButton;
+    [SerializeField]
+    private GameObject disconnectButton;
+    [SerializeField]
+    private GameObject scores;
     public InputField inputField;
     public Text roomID;
     private StateManager state;
@@ -25,6 +31,13 @@ public class GuiManager : MonoBehaviour {
         state = GetComponent<StateManager> ();
         state.input.Subscribe (this.Menu, Global.MENU);
         Menu ();
+
+        for (int i = 1; i <= 4; ++i) {
+            Transform scoreText = scores.transform.Find ("Player" + i);
+            if (scoreText != null) {
+                scoreText.GetComponent<Text> ().color = GetColorByNetID ((short) (i - 1));
+            }
+        }
     }
 
     public void LobbyGUI () {
@@ -32,6 +45,7 @@ public class GuiManager : MonoBehaviour {
         inputField.ActivateInputField ();
         createButton.SetActive (true);
         disconnectButton.SetActive (false);
+        scores.SetActive (false);
         roomID.enabled = false;
     }
 
@@ -40,6 +54,7 @@ public class GuiManager : MonoBehaviour {
         inputField.DeactivateInputField ();
         createButton.SetActive (false);
         disconnectButton.SetActive (true);
+        scores.SetActive (true);
         roomID.enabled = true;
     }
 
@@ -75,10 +90,30 @@ public class GuiManager : MonoBehaviour {
         }
     }
 
+    public void Cleanup () {
+        for (short i = 0; i < 4; ++i) {
+            reportScore (i, 0);
+        }
+        LobbyGUI ();
+    }
+
     public void Menu () {
         menuOpen = !menuOpen;
         menu.SetActive (menuOpen);
         state.OpenMenu (menuOpen);
+    }
+
+    public void reportScore (short netID, int score) {
+        Debug.Log ("Reporting score from netID: " + netID);
+        Debug.Log (UnityEngine.StackTraceUtility.ExtractStackTrace ());
+        Text scoreField = null;
+        Transform scoreText = scores.transform.Find ("Player" + (netID + 1));
+        if (scoreText != null) {
+            scoreField = scoreText.GetComponent<Text> ();
+        }
+        if (scoreField != null) {
+            scoreField.text = "Player " + (netID + 1) + "\nScore: " + score;
+        }
     }
 
     public static Color GetColorByNetID (short netID) {

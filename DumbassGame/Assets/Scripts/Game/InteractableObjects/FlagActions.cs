@@ -13,16 +13,11 @@ public class FlagActions : InteractableActions {
     private Quaternion startingRotation;
 
     // Start is called before the first frame update
-    void Start () {
+    void Awake () {
         string parentName = transform.parent.gameObject.name;
         netID = short.Parse (parentName.Remove (0, 3));
         flagBox.material.color = GuiManager.GetColorByNetID (netID);
         startingRotation = this.transform.rotation;
-
-    }
-
-    // Update is called once per frame
-    void Update () {
 
     }
 
