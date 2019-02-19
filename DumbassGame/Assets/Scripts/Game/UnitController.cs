@@ -41,7 +41,12 @@ public class UnitController : MonoBehaviour {
     // Called by user
     public virtual void CmdMoveTo (Vector3 targetPos) {
         MoveTo (targetPos.x, targetPos.z);
-        state.network.SendMove (this.name, targetPos.x, targetPos.z);
+        state.network.SendMessage (new Move {
+            id = name,
+                ownerID = state.network.networkID,
+                x = targetPos.x,
+                z = targetPos.z
+        });
     }
     // Called by other users
     public virtual void MoveTo (float x, float z) {
@@ -55,7 +60,10 @@ public class UnitController : MonoBehaviour {
 
     public virtual void CmdStop () {
         Stop ();
-        state.network.SendStop (this.name);
+        state.network.SendMessage (new Stop {
+            id = name,
+                ownerID = state.network.networkID
+        });
     }
     public virtual void Stop () {
         MoveTo (this.transform.position.x, this.transform.position.z);
@@ -68,9 +76,6 @@ public class UnitController : MonoBehaviour {
 
     public void TakeDamage (int damage) {
         health -= damage;
-        if (health <= 0) {
-            DestroyThis ();
-        }
     }
 
     private void DestroyThis () {
@@ -96,7 +101,12 @@ public class UnitController : MonoBehaviour {
 
     public virtual void CmdAttack (Vector3 targetPos) {
         Attack (targetPos.x, targetPos.z);
-        state.network.SendAttack (this.name, targetPos.x, targetPos.z);
+        state.network.SendMessage (new Attack {
+            id = name,
+                ownerID = state.network.networkID,
+                x = targetPos.x,
+                z = targetPos.z
+        });
     }
 
     public virtual void Attack (float x, float z) {
@@ -107,7 +117,12 @@ public class UnitController : MonoBehaviour {
 
     public virtual void CmdSyncPos () {
         if (agent.obstacleAvoidanceType == ObstacleAvoidanceType.HighQualityObstacleAvoidance) {
-            state.network.SendSyncPos (this.name, short.Parse (this.transform.parent.name.Remove (0, 3)), this.transform.position.x, this.transform.position.z);
+            state.network.SendMessage (new SyncPos {
+                id = this.name,
+                    ownerID = short.Parse (this.transform.parent.name.Remove (0, 3)),
+                    x = this.transform.position.x,
+                    z = this.transform.position.z
+            });
         }
     }
 
@@ -120,6 +135,10 @@ public class UnitController : MonoBehaviour {
 
     // Update is called once per frame
     private void FixedUpdate () {
+        if (health <= 0) {
+            DestroyThis ();
+            return;
+        }
 
         // check if distance to target is greater than distance threshold
         if (Vector3.Distance (transform.position, agent.steeringTarget) > 0.1f) {
@@ -145,7 +164,7 @@ public class UnitController : MonoBehaviour {
         anim.SetMove (moving);
 
         if (state.isServer) {
-            state.network.SendSyncPos (this.name, short.Parse (this.transform.parent.name.Remove (0, 3)), this.transform.position.x, this.transform.position.z);
+            CmdSyncPos ();
         }
 
     }

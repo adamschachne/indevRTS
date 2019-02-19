@@ -11,47 +11,53 @@ public class BuildingController : UnitController {
         state = StateManager.state;
         health = 100;
         if (!state) {
-            throw new System.Exception("no state found");
+            throw new System.Exception ("no state found");
         }
-        navObstacle = GetComponent<NavMeshObstacle>();
+        navObstacle = GetComponent<NavMeshObstacle> ();
         //anim = GetComponent<AnimationController>();
         //actions = GetComponent<ActionController>();
     }
 
-    public override void CmdMoveTo(Vector3 targetPos) {        
-        MoveTo(targetPos.x, targetPos.z);
-        state.network.SendMove(this.name, targetPos.x, targetPos.z);
+    public override void CmdMoveTo (Vector3 targetPos) {
+        MoveTo (targetPos.x, targetPos.z);
+        state.network.SendMessage (new Move {
+            id = name,
+                ownerID = state.network.networkID,
+                x = targetPos.x,
+                z = targetPos.z
+        });
     }
 
     // Called by other users
-    public override void MoveTo(float x, float z) {
-        
+    public override void MoveTo (float x, float z) {
+
     }
 
-    public override void CmdStop()
-    {
-        Stop();
-        state.network.SendStop(this.name);
+    public override void CmdStop () {
+        Stop ();
+        state.network.SendMessage (new Stop {
+            id = name,
+                ownerID = state.network.networkID
+        });
     }
-    public override void Stop() {
-        Debug.Log("Triggered stop on a building.");
+    public override void Stop () {
+        Debug.Log ("Triggered stop on a building.");
     }
 
-    private void DestroyThis()
-    {
-        state.RemoveUnit(this.gameObject);
+    private void DestroyThis () {
+        state.RemoveUnit (this.gameObject);
         this.transform.parent = null;
-        state.selection.CleanupSelection(this.gameObject);
-        Destroy(this.gameObject);
+        state.selection.CleanupSelection (this.gameObject);
+        Destroy (this.gameObject);
     }
 
-    public override void CmdAttack(Vector3 targetPos){}
+    public override void CmdAttack (Vector3 targetPos) { }
 
-    public override void Attack(float x, float z){}
+    public override void Attack (float x, float z) { }
 
-    public override void CmdSyncPos() {}
+    public override void CmdSyncPos () { }
 
-    public override void SyncPos(float x, float z) {}
+    public override void SyncPos (float x, float z) { }
 
     // Update is called once per frame
     private void FixedUpdate () {

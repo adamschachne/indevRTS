@@ -280,7 +280,7 @@ public class StateManager : MonoBehaviour {
         if (unitLookup.TryGetValue (units.name + name, out unit)) {
             unit.GetComponent<UnitController> ().TakeDamage (damage);
         } else {
-            Debug.Log ("Unit with name: " + units.name + name + " was not found!");
+            Debug.Log ("Unit from player: " + units.name + "with name: " + name + " was not found!");
         }
 
     }

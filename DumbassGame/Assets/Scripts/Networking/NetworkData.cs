@@ -3,26 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NetTypes {
-    public const string SYNC = "SYNC"; // list containing all current units in the game; this should not be sent often
-    public const string ADD_UNIT = "ADDUNIT"; // sent when a new unit was added to the game
-    public const string REQUEST_UNIT = "REQUESTUNIT"; // sent to the server asking for a new unit
-    public const string MOVE_UNIT = "MOVE"; // command move a unit
-    public const string STOP_UNIT = "STOP"; // command a unit to stop
-    public const string ATTACK_UNIT = "ATTACK"; //command a unit to attack
-    public const string DAMAGE_UNIT = "DAMAGE"; //send damage to a unit
-    public const string SYNC_POS = "SYNCPOSITION"; //sync a unit's position across network
-    public const string BATCH = "BATCH"; //sync a list of units all at once
+[Serializable]
+public class GameMessage {
+    public virtual void process () { Debug.Log ("Wrong function was called :("); }
 }
 
 [Serializable]
-public class NetworkJSON {
-    public string type;
-    public string json;
-}
-
-[Serializable]
-public class NetworkUnit {
+public class NetworkUnit : GameMessage {
     public string id;
     public float x;
     public float z;
@@ -31,80 +18,110 @@ public class NetworkUnit {
 }
 
 [Serializable]
-public class SyncUnits {
+public class SyncUnits : GameMessage {
     public List<NetworkUnit> units;
     //public short connectionId;
+    public override void process () {
+        Debug.Log ("HANDLING SYNC");
+        // Client Only
+        if (StateManager.state.isServer == true) {
+            return;
+        }
+
+        foreach (NetworkUnit netUnit in this.units) {
+            short ownerID = netUnit.ownerID;
+            GameObject unit = StateManager.state.addUnit (ownerID, netUnit.unitType, new Vector2 (netUnit.x, netUnit.z), netUnit.id);
+        }
+
+        StateManager.state.ResetScores ();
+    }
 }
 
-//[Serializable]
-//public class SyncPackage {
-//    public short newID; // the connection that just joined
-//    public short toID; // the connection this package is directed to
-//    public List<SyncUnits> cxns;
-//}
-
 [Serializable]
-public class AddUnit {
+public class AddUnit : GameMessage {
     public short ownerID; // the connection that added a unit
     public NetworkUnit unit; // the unit added
-
-    [NonSerialized]
-    public static Action<short, NetworkUnit> action = (short netId, NetworkUnit netunit) => {
+    public override void process () {
         Debug.Log ("HANDLING ADD UNIT");
         // Client Only
         if (StateManager.state.isServer == true) {
             return;
         }
-        GameObject unit = StateManager.state.addUnit (netId, netunit.unitType, new Vector2 (netunit.x, netunit.z), netunit.id);
-    };
+        GameObject unit = StateManager.state.addUnit (this.ownerID, this.unit.unitType, new Vector2 (this.unit.x, this.unit.z), this.unit.id);
+    }
 }
 
 [Serializable]
-public class RequestUnit {
+public class RequestUnit : GameMessage {
     public short ownerID; // the connection that requested a unit
     public StateManager.EntityType unitType;
     public float x;
     public float z;
+    public override void process () {
+        StateManager.state.network.HandleRequestUnit (this);
+    }
 }
 
 [Serializable]
-public class Move {
+public class Move : GameMessage {
     public string id; // name of the unit that is commanded
     public float x;
     public float z;
     public short ownerID; // network id of the owner
+
+    public override void process () {
+        StateManager.state.MoveCommand (this.ownerID, this.id, this.x, this.z);
+    }
 }
 
 [Serializable]
-public class Stop {
+public class Stop : GameMessage {
     public string id;
     public short ownerID;
+    public override void process () {
+        StateManager.state.StopCommand (this.ownerID, this.id);
+    }
 }
 
 [Serializable]
-public class Attack {
+public class Attack : GameMessage {
     public string id;
     public short ownerID;
     public float x;
     public float z;
+    public override void process () {
+        StateManager.state.AttackCommand (this.ownerID, this.id, this.x, this.z);
+    }
 }
 
 [Serializable]
-public class Damage {
+public class Damage : GameMessage {
     public string id;
     public short ownerID;
     public int damage;
+    public override void process () {
+        Debug.Log ("Recieved Damage signal. Processing Damage Unit.");
+        StateManager.state.DamageUnit (this.ownerID, this.id, this.damage);
+    }
 }
 
 [Serializable]
-public class SyncPos {
+public class SyncPos : GameMessage {
     public string id;
     public short ownerID;
     public float x;
     public float z;
+    public override void process () {
+        StateManager.state.SyncPos (this.ownerID, this.id, this.x, this.z);
+    }
 }
 
 [Serializable]
-public class Batch {
-    public List<NetworkJSON> cmds;
+public class Batch : GameMessage {
+    public List<GameMessage> cmds;
+    public override void process () {
+        foreach (GameMessage cmd in this.cmds) {
+            cmd.process ();
+        }
+    }
 }
