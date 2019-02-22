@@ -20,7 +20,7 @@ public class NetworkManager : MonoBehaviour {
     public short networkID = 0;
 
     private StateManager state;
-    private List<GameMessage> batch;
+    private List<Message> batch;
     JsonSerializerSettings jssettings;
 
     // Use this for initialization
@@ -38,7 +38,7 @@ public class NetworkManager : MonoBehaviour {
         } else {
             Debug.Log ("Failed to access webrtc ");
         }
-        batch = new List<GameMessage> ();
+        batch = new List<Message> ();
     }
 
     public void OnInputEndEdit () {
@@ -61,10 +61,6 @@ public class NetworkManager : MonoBehaviour {
     }
 
     public void OnCreateRoomClicked () {
-        CreateRoom ();
-    }
-
-    public void CreateRoom () {
         Setup ();
         // All players will connect to the same room for now TODO
         const string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -115,7 +111,7 @@ public class NetworkManager : MonoBehaviour {
         }
     }
 
-    private void SendSync () {
+    public void SendSync () {
         // From Server Only
         if (state.isServer == false) {
             return;
@@ -160,7 +156,7 @@ public class NetworkManager : MonoBehaviour {
         SendMessage (syncData);
     }
 
-    public void SendMessage (GameMessage message, bool toBatch = true) {
+    public void SendMessage (Message message, bool toBatch = true) {
         if (message != null) {
             if (toBatch) {
                 batch.Add (message);
@@ -208,13 +204,12 @@ public class NetworkManager : MonoBehaviour {
     }
 
     private void HandleIncommingMessage (ref NetworkEvent evt) {
-        short requestID = evt.ConnectionId.id;
         MessageDataBuffer buffer = (MessageDataBuffer) evt.MessageData;
         string msg = Encoding.UTF8.GetString (buffer.Buffer, 0, buffer.ContentLength);
 
         try {
             //Debug.Log ("Processing message: " + msg);
-            GameMessage message = JsonConvert.DeserializeObject<GameMessage> (msg, jssettings);
+            Message message = JsonConvert.DeserializeObject<Message> (msg, jssettings);
 
             if (message == null) {
                 Debug.Log ("Json was null!");
@@ -265,10 +260,12 @@ public class NetworkManager : MonoBehaviour {
                         state.isServer = true;
                         // currently the server is always 0
                         networkID = 0;
-                        state.StartGame ();
+
                         string address = evt.Info;
                         state.gui.roomID.text = "Room ID: " + address;
                         Debug.Log ("Server started. Address: " + address);
+                        state.gui.MapSelectMenu ();
+                        state.gui.mapSelect.init (address);
                         break;
                     case NetEventType.ServerInitFailed:
                         state.isServer = false;
@@ -279,6 +276,7 @@ public class NetworkManager : MonoBehaviour {
                         state.isServer = false;
                         state.LeaveGame ();
                         Debug.Log ("Server closed. No incoming connections possible until restart.");
+                        state.gui.ConnectMenu ();
                         break;
                     case NetEventType.NewConnection:
                         ConnectionId connection = evt.ConnectionId;
@@ -286,18 +284,21 @@ public class NetworkManager : MonoBehaviour {
                         // regardless of server or client, save this connection so it can be used
                         mConnections.Add (connection);
 
-                        // SERVER ONLY
-                        if (state.isServer == true) {
-                            SendSync ();
-                        }
                         // CLIENT ONLY
-                        if (state.isServer == false) {
+                        if (!state.isServer) {
                             // currently, the client is always 1 TODO
                             networkID = 1;
+                            /*
                             if (state.inGame == false) {
                                 Debug.Log ("starting game");
                                 state.StartGame ();
                             }
+                            */
+                            SendMessage (new Connected {
+                                playerID = networkID
+                            });
+                            string serverAddress = evt.Info;
+                            state.gui.mapSelect.init (serverAddress);
                         }
                         break;
                     case NetEventType.ConnectionFailed:

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.AI;
 
 public class BuildingController : UnitController {
-    private NavMeshObstacle navObstacle;
+    //private NavMeshObstacle navObstacle;
 
     // Use this for initialization
     void Start () {
@@ -13,7 +13,7 @@ public class BuildingController : UnitController {
         if (!state) {
             throw new System.Exception ("no state found");
         }
-        navObstacle = GetComponent<NavMeshObstacle> ();
+        //navObstacle = GetComponent<NavMeshObstacle> ();
         //anim = GetComponent<AnimationController>();
         //actions = GetComponent<ActionController>();
     }

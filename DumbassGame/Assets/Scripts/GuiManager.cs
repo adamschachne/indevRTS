@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class GuiManager : MonoBehaviour {
 
     public Canvas canvas;
-    public GameObject menu;
+    public GameObject keybindMenu;
     [SerializeField]
     private GameObject KeyButtonPrefab;
     [SerializeField]
@@ -20,17 +20,27 @@ public class GuiManager : MonoBehaviour {
     private GameObject scores;
     public InputField inputField;
     public Text roomID;
+    public MapSelect mapSelect;
     private StateManager state;
     private bool menuOpen = true;
+    private GameObject connectMenu;
+    private GameObject RTSGUIParent;
+    private GameObject mapSelectParent;
 
     // Use this for initialization
     void Start () {
-        if (!(joinButton && createButton && disconnectButton && inputField && roomID && canvas && menu && KeyButtonPrefab)) {
+        if (!(joinButton && createButton && disconnectButton && inputField && roomID && canvas && keybindMenu && KeyButtonPrefab)) {
             throw new System.Exception ("GUI elements not defined");
         }
         state = GetComponent<StateManager> ();
-        state.input.Subscribe (this.Menu, Global.MENU);
-        Menu ();
+        state.input.Subscribe (this.KeybindMenu, Global.MENU);
+
+        connectMenu = canvas.transform.Find ("ConnectMenu").gameObject;
+        RTSGUIParent = canvas.transform.Find ("RTS GUI").gameObject;
+        mapSelectParent = canvas.transform.Find ("MapSelect").gameObject;
+        mapSelect = new MapSelect (mapSelectParent);
+
+        KeybindMenu ();
 
         for (int i = 1; i <= 4; ++i) {
             Transform scoreText = scores.transform.Find ("Player" + i);
@@ -38,24 +48,26 @@ public class GuiManager : MonoBehaviour {
                 scoreText.GetComponent<Text> ().color = GetColorByNetID ((short) (i - 1));
             }
         }
+
+        ConnectMenu ();
     }
 
-    public void LobbyGUI () {
-        joinButton.SetActive (true);
-        inputField.ActivateInputField ();
-        createButton.SetActive (true);
-        disconnectButton.SetActive (false);
-        scores.SetActive (false);
-        roomID.enabled = false;
+    public void ConnectMenu () {
+        connectMenu.SetActive (true);
+        RTSGUIParent.SetActive (false);
+        mapSelectParent.SetActive (false);
     }
 
-    public void GameGUI () {
-        joinButton.SetActive (false);
-        inputField.DeactivateInputField ();
-        createButton.SetActive (false);
-        disconnectButton.SetActive (true);
-        scores.SetActive (true);
-        roomID.enabled = true;
+    public void RTSGUI () {
+        connectMenu.SetActive (false);
+        RTSGUIParent.SetActive (true);
+        mapSelectParent.SetActive (false);
+    }
+
+    public void MapSelectMenu () {
+        connectMenu.SetActive (false);
+        RTSGUIParent.SetActive (false);
+        mapSelectParent.SetActive (true);
     }
 
     public void CreateKeybindButtons (List<List<ActionType>>[] groups, StateManager.View[] gameModes) {
@@ -77,7 +89,7 @@ public class GuiManager : MonoBehaviour {
                 GameObject keyButton = Instantiate (KeyButtonPrefab);
                 Transform keyButtonTransform = keyButton.GetComponent<Transform> ();
                 KeybindButton buttonScript = keyButton.GetComponent<KeybindButton> ();
-                keyButton.transform.SetParent (menu.transform, false);
+                keyButton.transform.SetParent (keybindMenu.transform, false);
                 buttonScript.Init (group);
                 keyButtonTransform.position = new Vector3 (xPos, yPos, 0);
                 yPos -= (int) (buttonSize.rect.height * canvas.scaleFactor * 1.5);
@@ -94,24 +106,20 @@ public class GuiManager : MonoBehaviour {
         for (short i = 0; i < 4; ++i) {
             reportScore (i, 0);
         }
-        LobbyGUI ();
+        ConnectMenu ();
     }
 
-    public void Menu () {
+    public void KeybindMenu () {
         menuOpen = !menuOpen;
-        menu.SetActive (menuOpen);
+        keybindMenu.SetActive (menuOpen);
         state.OpenMenu (menuOpen);
     }
 
     public void reportScore (short netID, int score) {
-        Debug.Log ("Reporting score from netID: " + netID);
-        Debug.Log (UnityEngine.StackTraceUtility.ExtractStackTrace ());
         Text scoreField = null;
         Transform scoreText = scores.transform.Find ("Player" + (netID + 1));
         if (scoreText != null) {
             scoreField = scoreText.GetComponent<Text> ();
-        }
-        if (scoreField != null) {
             scoreField.text = "Player " + (netID + 1) + "\nScore: " + score;
         }
     }
@@ -129,4 +137,17 @@ public class GuiManager : MonoBehaviour {
                 return Color.yellow;
         }
     }
+
+    //functions to bind MapSelect button decision callbacks to.
+    //they have to be here because they need to reference a MonoBehavior.
+
+    //sends a start game message to all clients. All clients that recieve this will then request a unit sync from the server.
+    public void SendStartGame () {
+        Debug.Log ("Start game called.");
+        if (state.isServer) {
+            state.StartGame ();
+            state.network.SendMessage (new StartGame ());
+        }
+    }
+
 }

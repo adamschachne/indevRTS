@@ -114,7 +114,6 @@ public class StateManager : MonoBehaviour {
         // Start in the Lobby
         //gameView = View.Lobby;
         selection.enabled = false;
-        gui.LobbyGUI ();
         s = this;
     }
 
@@ -129,20 +128,17 @@ public class StateManager : MonoBehaviour {
         CreateTopLevelGameUnits ();
         inGame = true;
 
-        //start of game unit spawns go here
-        if (isServer) {
-            network.requestNewUnit (EntityType.FlagPlatform, 8, 8);
-        } else {
+        if (!isServer) {
             network.requestNewUnit (EntityType.FlagPlatform, -8, 8);
         }
 
         if (gameView == View.Global)
-            gui.Menu ();
+            gui.KeybindMenu ();
 
         gameView = View.RTS;
         selection.enabled = true;
         // show game UI
-        gui.GameGUI ();
+        gui.RTSGUI ();
         // zero out each player's points
         points = new int[4];
     }
@@ -157,6 +153,7 @@ public class StateManager : MonoBehaviour {
         network.requestNewUnit (EntityType.Dog, UnityEngine.Random.Range (-3, 3), UnityEngine.Random.Range (-3, 3));
     }
 
+    //todo: make this more effecient. you know how.
     private GameObject GetNetUserGameUnits (short netID) {
         string myGameUnitsName = "GU-" + netID;
         foreach (var child in gameUnits.GetComponentsInChildren<Transform> ()) {
@@ -169,6 +166,7 @@ public class StateManager : MonoBehaviour {
         return newGameUnits;
     }
 
+    //todo: make this more effecient. you know how.
     private GameObject GetNetUserInteractableObjects (short netID) {
         string myGameUnitsName = "IO-" + netID;
         foreach (var child in gameUnits.GetComponentsInChildren<Transform> ()) {
@@ -303,7 +301,7 @@ public class StateManager : MonoBehaviour {
             return;
         }
         if (gameView == View.Global) {
-            gui.Menu ();
+            gui.KeybindMenu ();
         }
         gameView = View.Lobby;
         isServer = false;

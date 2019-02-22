@@ -7,8 +7,6 @@ public class UnitController : MonoBehaviour {
     [SerializeField]
     private Vector3 targetDirection;
     [SerializeField]
-    private float moveSpeed = 3.0f;
-    [SerializeField]
     private float rotateSpeed = 0.65f;
     private float rotateCounter = 0;
     [SerializeField]

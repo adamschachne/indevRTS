@@ -98,6 +98,7 @@ public class BoxReticle : Reticle {
 				Debug.Log ("Closest Unit isNull: " + closest);
 				Debug.Log ("Closest Unit parent transform isNull: " + closest.transform.parent);
 				Debug.Log ("Closest Unit parent gameObject isNull: " + closest.transform.parent.gameObject);
+				Debug.Log (e.StackTrace);
 			}
 		} else {
 			Destroy (this.gameObject);
