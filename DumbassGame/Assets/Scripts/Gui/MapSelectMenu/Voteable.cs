@@ -23,21 +23,25 @@ public class Voteable : MonoBehaviour {
             this.decision = other.decision;
         }
     }
-    private MapSelect mapSelect;
+
+    [System.Serializable]
+    public class VotableEvent : UnityEvent<Voteable> { }
+    protected MapSelect mapSelect;
+    [SerializeField]
+    [ReadOnly]
     private short voteableID;
-    private MapSelect.MapSelectState menuState;
+    protected MapSelect.MapSelectState menuState;
     private RectTransform bounds;
     [SerializeField]
     private GameObject votePrefab;
     private GameObject[] votePips;
     private const float topOffset = 10f;
     public VoteInfo voteInfo;
-    [SerializeField]
-    private UnityEvent decisionCallback;
+    public VotableEvent decisionCallback;
     private bool triggered;
 
     //init returns the newly-active voteInfo data
-    public VoteInfo init (MapSelect mapSelect, short voteableID) {
+    public virtual VoteInfo init (MapSelect mapSelect, short voteableID) {
         if (decisionCallback == null) {
             Debug.Log ("ERROR IN: " + this.gameObject.name + " object, decision callback was null!");
         }
@@ -115,7 +119,7 @@ public class Voteable : MonoBehaviour {
         if (StateManager.state.isServer) {
             //trigger the decision callback when consensus has been made
             if (voteInfo.decision && !triggered) {
-                decisionCallback.Invoke ();
+                decisionCallback.Invoke (this);
                 triggered = true;
             }
             //otherwise, if the decision switches back to false, un-trigger this so it can trigger again
@@ -125,12 +129,16 @@ public class Voteable : MonoBehaviour {
         }
     }
 
-    public void RecieveVote (short networkID, bool vote) {
+    public virtual void RecieveVote (short networkID, bool vote) {
         if (StateManager.state.isServer) {
-            if (networkID == 0 || !menuState.ownerControl) {
+            if (voteInfo.votes[networkID] != vote && (networkID == 0 || !menuState.ownerControl)) {
                 voteInfo.votes[networkID] = vote;
                 mapSelect.SendSync ();
             }
         }
+    }
+
+    public short GetVotableID () {
+        return voteableID;
     }
 }

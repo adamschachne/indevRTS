@@ -19,17 +19,18 @@ public class BuildingController : UnitController {
     }
 
     public override void CmdMoveTo (Vector3 targetPos) {
-        MoveTo (targetPos.x, targetPos.z);
+        MoveTo (targetPos.x, targetPos.y, targetPos.z);
         state.network.SendMessage (new Move {
             id = name,
                 ownerID = state.network.networkID,
                 x = targetPos.x,
+                y = targetPos.y,
                 z = targetPos.z
         });
     }
 
     // Called by other users
-    public override void MoveTo (float x, float z) {
+    public override void MoveTo (float x, float y, float z) {
 
     }
 

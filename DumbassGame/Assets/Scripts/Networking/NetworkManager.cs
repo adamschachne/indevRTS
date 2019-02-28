@@ -130,8 +130,6 @@ public class NetworkManager : MonoBehaviour {
                     networkUnit.ownerID = ownerID;
                     networkUnit.id = unit.name;
                     networkUnit.unitType = unit.gameObject.GetComponent<UnitController> ().type;
-                    networkUnit.x = unit.position.x;
-                    networkUnit.z = unit.position.z;
                     netUnits.Add (networkUnit);
                 }
             } else if (gameUnits.name.Split ('-') [0].Equals ("IO")) {
@@ -142,8 +140,6 @@ public class NetworkManager : MonoBehaviour {
                         networkUnit.ownerID = ownerID;
                         networkUnit.id = unit.name;
                         networkUnit.unitType = unit.gameObject.GetComponent<Interactable> ().type;
-                        networkUnit.x = unit.position.x;
-                        networkUnit.z = unit.position.z;
                         netUnits.Add (networkUnit);
                     }
                 }
@@ -189,14 +185,12 @@ public class NetworkManager : MonoBehaviour {
         // if they can, make a unit and send an addUnit message out
         short netID = ru.ownerID;
         StateManager.EntityType unitType = ru.unitType;
-        GameObject unit = state.addUnit (netID, unitType, new Vector2 (ru.x, ru.z), null);
+        GameObject unit = state.addUnit (netID, unitType, null);
 
         AddUnit addUnit = new AddUnit ();
         addUnit.ownerID = netID;
         addUnit.unit = new NetworkUnit ();
         addUnit.unit.id = unit.name;
-        addUnit.unit.x = unit.transform.position.x;
-        addUnit.unit.z = unit.transform.position.z;
         addUnit.unit.unitType = unitType;
 
         // send the new unit to connections
@@ -232,15 +226,11 @@ public class NetworkManager : MonoBehaviour {
             RequestUnit req = new RequestUnit ();
             req.ownerID = networkID;
             req.unitType = unitType;
-            req.x = x;
-            req.z = z;
             HandleRequestUnit (req);
         } else {
             RequestUnit req = new RequestUnit ();
             req.ownerID = networkID;
             req.unitType = unitType;
-            req.x = x;
-            req.z = z;
             SendMessage (req);
         }
     }

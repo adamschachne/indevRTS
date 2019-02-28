@@ -142,7 +142,7 @@ public class GuiManager : MonoBehaviour {
     //they have to be here because they need to reference a MonoBehavior.
 
     //sends a start game message to all clients. All clients that recieve this will then request a unit sync from the server.
-    public void SendStartGame () {
+    public void SendStartGame (Voteable v) {
         Debug.Log ("Start game called.");
         if (state.isServer) {
             state.StartGame ();

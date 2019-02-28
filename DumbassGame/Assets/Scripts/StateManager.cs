@@ -59,6 +59,7 @@ public class StateManager : MonoBehaviour {
     public bool inGame;
     [ReadOnly]
     private int[] points;
+    public MapData currentMap;
     [ReadOnly]
     public Dictionary<short, int> unitCounts; // map network id to count
     private Dictionary<string, GameObject> unitLookup;
@@ -128,10 +129,6 @@ public class StateManager : MonoBehaviour {
         CreateTopLevelGameUnits ();
         inGame = true;
 
-        if (!isServer) {
-            network.requestNewUnit (EntityType.FlagPlatform, -8, 8);
-        }
-
         if (gameView == View.Global)
             gui.KeybindMenu ();
 
@@ -141,16 +138,23 @@ public class StateManager : MonoBehaviour {
         gui.RTSGUI ();
         // zero out each player's points
         points = new int[4];
+        currentMap = Instantiate (gui.mapSelect.GetMapData ().gameObject, this.transform).GetComponent<MapData> ();
+
     }
 
     private void SpawnShootGuy () {
-        network.requestNewUnit (EntityType.Soldier, UnityEngine.Random.Range (-3, 3), UnityEngine.Random.Range (-3, 3));
+        network.requestNewUnit (EntityType.Soldier,
+            UnityEngine.Random.Range (-3, 3),
+            UnityEngine.Random.Range (-3, 3));
     }
     private void SpawnIronfoe () {
-        network.requestNewUnit (EntityType.Ironfoe, UnityEngine.Random.Range (-3, 3), UnityEngine.Random.Range (-3, 3));
+        network.requestNewUnit (EntityType.Ironfoe,
+            UnityEngine.Random.Range (-3, 3),
+            UnityEngine.Random.Range (-3, 3));
     }
     private void SpawnDog () {
-        network.requestNewUnit (EntityType.Dog, UnityEngine.Random.Range (-3, 3), UnityEngine.Random.Range (-3, 3));
+        network.requestNewUnit (EntityType.Dog,
+            UnityEngine.Random.Range (-3, 3), UnityEngine.Random.Range (-3, 3));
     }
 
     //todo: make this more effecient. you know how.
@@ -191,32 +195,43 @@ public class StateManager : MonoBehaviour {
         return count + 1;
     }
 
-    public GameObject addUnit (short netID, EntityType unitType, Vector2 spawnPosition, string name = null) {
+    public GameObject addUnit (short netID, EntityType unitType, string name = null) {
         // get my game units
         GameObject myUnits = GetNetUserGameUnits (netID);
         // create a fucking guy in the gameUnits
         GameObject unit;
 
-        Vector3 xyzPosition = new Vector3 (spawnPosition.x, 0, spawnPosition.y);
+        Vector3 unitSpawnPositions;
+        Vector3 xyzPosition;
+
+        if (unitType == EntityType.FlagPlatform) {
+            xyzPosition = currentMap.mapInfo.flagPositions[netID];
+        } else {
+            unitSpawnPositions = currentMap.mapInfo.unitSpawnPositions[netID];
+            xyzPosition = new Vector3 (unitSpawnPositions.x + UnityEngine.Random.Range (-2, 2),
+                unitSpawnPositions.y,
+                unitSpawnPositions.z + UnityEngine.Random.Range (-2, 2));
+        }
+
         switch (unitType) {
             case EntityType.Barracks:
-                xyzPosition.y = barracks.transform.position.y;
+                xyzPosition.y += barracks.transform.position.y;
                 unit = Instantiate (barracks, xyzPosition, barracks.transform.rotation, myUnits.transform);
                 break;
 
             case EntityType.Soldier:
             default:
-                xyzPosition.y = guyPrefab.transform.position.y;
+                xyzPosition.y += guyPrefab.transform.position.y;
                 unit = Instantiate (guyPrefab, xyzPosition, guyPrefab.transform.rotation, myUnits.transform);
                 break;
 
             case EntityType.Ironfoe:
-                xyzPosition.y = ironfoePrefab.transform.position.y;
+                xyzPosition.y += ironfoePrefab.transform.position.y;
                 unit = Instantiate (ironfoePrefab, xyzPosition, ironfoePrefab.transform.rotation, myUnits.transform);
                 break;
 
             case EntityType.FlagPlatform:
-                xyzPosition.y = flagPlatformPrefab.transform.position.y;
+                xyzPosition.y += flagPlatformPrefab.transform.position.y;
                 unit = Instantiate (flagPlatformPrefab, xyzPosition, flagPlatformPrefab.transform.rotation, GetNetUserInteractableObjects (netID).transform);
                 return unit;
 
@@ -225,7 +240,7 @@ public class StateManager : MonoBehaviour {
                 return null;
 
             case EntityType.Dog:
-                xyzPosition.y = dogPrefab.transform.position.y;
+                xyzPosition.y += dogPrefab.transform.position.y;
                 unit = Instantiate (dogPrefab, xyzPosition, flagPlatformPrefab.transform.rotation, myUnits.transform);
                 break;
         }
@@ -241,12 +256,12 @@ public class StateManager : MonoBehaviour {
         return unit;
     }
 
-    public void MoveCommand (short ownerID, string name, float x, float z) {
+    public void MoveCommand (short ownerID, string name, float x, float y, float z) {
         GameObject units = GetNetUserGameUnits (ownerID);
 
         GameObject unit;
         if (unitLookup.TryGetValue (units.name + name, out unit)) {
-            unit.GetComponent<UnitController> ().MoveTo (x, z);
+            unit.GetComponent<UnitController> ().MoveTo (x, y, z);
         } else {
             Debug.Log ("Unit with name: " + units.name + name + " was not found!");
         }
@@ -326,6 +341,7 @@ public class StateManager : MonoBehaviour {
         gameUnits.transform.SetParent (null);
         Destroy (gameUnits);
         unitLookup.Clear ();
+        Destroy (currentMap.gameObject);
     }
 
     public void OpenMenu (bool open) {
@@ -348,6 +364,17 @@ public class StateManager : MonoBehaviour {
         for (short i = 0; i < 4; ++i) {
             points[i] = 0;
             gui.reportScore (i, 0);
+        }
+    }
+
+    public void StartOfGameUnits () {
+        StateManager.state.addUnit (0, StateManager.EntityType.FlagPlatform, null);
+        StateManager.state.addUnit (1, StateManager.EntityType.FlagPlatform, null);
+    }
+
+    public void AssignStartMap (Voteable v) {
+        if (v.GetComponent<MapButton> () != null) {
+            gui.mapSelect.SetCurrentMap (v.GetVotableID ());
         }
     }
 }

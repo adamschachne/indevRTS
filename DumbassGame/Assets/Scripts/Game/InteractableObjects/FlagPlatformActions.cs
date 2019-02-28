@@ -14,7 +14,7 @@ public class FlagPlatformActions : InteractableActions {
     // Start is called before the first frame update
     void Awake () {
         string parentName = transform.parent.gameObject.name;
-        flagPos = new Vector3 (this.transform.position.x, flagPrefab.transform.position.y, this.transform.position.z);
+        flagPos = new Vector3 (this.transform.position.x, this.transform.position.y + flagPrefab.transform.position.y, this.transform.position.z);
         flag = Instantiate (flagPrefab, flagPos, flagPrefab.transform.rotation, this.transform.parent);
         flag.GetComponent<FlagActions> ().setHome (this.gameObject);
         flagIsHome = true;

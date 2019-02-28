@@ -11,8 +11,6 @@ public class Message {
 [Serializable]
 public class NetworkUnit : Message {
     public string id;
-    public float x;
-    public float z;
     public short ownerID; // network id of the owner
     public StateManager.EntityType unitType;
 }
@@ -30,7 +28,7 @@ public class SyncUnits : Message {
 
         foreach (NetworkUnit netUnit in this.units) {
             short ownerID = netUnit.ownerID;
-            StateManager.state.addUnit (ownerID, netUnit.unitType, new Vector2 (netUnit.x, netUnit.z), netUnit.id);
+            StateManager.state.addUnit (ownerID, netUnit.unitType, netUnit.id);
         }
 
         StateManager.state.ResetScores ();
@@ -47,7 +45,7 @@ public class AddUnit : Message {
         if (StateManager.state.isServer == true) {
             return;
         }
-        StateManager.state.addUnit (this.ownerID, this.unit.unitType, new Vector2 (this.unit.x, this.unit.z), this.unit.id);
+        StateManager.state.addUnit (this.ownerID, this.unit.unitType, this.unit.id);
     }
 }
 
@@ -55,8 +53,6 @@ public class AddUnit : Message {
 public class RequestUnit : Message {
     public short ownerID; // the connection that requested a unit
     public StateManager.EntityType unitType;
-    public float x;
-    public float z;
     public override void process () {
         StateManager.state.network.HandleRequestUnit (this);
     }
@@ -66,11 +62,12 @@ public class RequestUnit : Message {
 public class Move : Message {
     public string id; // name of the unit that is commanded
     public float x;
+    public float y;
     public float z;
     public short ownerID; // network id of the owner
 
     public override void process () {
-        StateManager.state.MoveCommand (this.ownerID, this.id, this.x, this.z);
+        StateManager.state.MoveCommand (this.ownerID, this.id, this.x, this.y, this.z);
     }
 }
 
@@ -159,9 +156,8 @@ public class StartGame : Message {
 public class RequestSync : Message {
     public override void process () {
         if (StateManager.state.isServer) {
-            //start of game units
-            StateManager.state.addUnit (0, StateManager.EntityType.FlagPlatform, new Vector2 (8, 8), null);
-            StateManager.state.addUnit (1, StateManager.EntityType.FlagPlatform, new Vector2 (-8, 8), null);
+            //instantiate start of game units
+            StateManager.state.StartOfGameUnits ();
 
             StateManager.state.network.SendSync ();
         }

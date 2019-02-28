@@ -38,22 +38,23 @@ public class UnitController : MonoBehaviour {
 
     // Called by user
     public virtual void CmdMoveTo (Vector3 targetPos) {
-        MoveTo (targetPos.x, targetPos.z);
+        MoveTo (targetPos.x, targetPos.y, targetPos.z);
         state.network.SendMessage (new Move {
             id = name,
                 ownerID = state.network.networkID,
                 x = targetPos.x,
+                y = targetPos.y,
                 z = targetPos.z
         });
     }
     // Called by other users
-    public virtual void MoveTo (float x, float z) {
+    public virtual void MoveTo (float x, float y, float z) {
         if (actions.CancelAttack ()) {
             anim.SetIdle ();
             anim.ResetAttack ();
         }
         rotating = false;
-        agent.destination = new Vector3 (x, transform.position.y, z);
+        agent.destination = new Vector3 (x, y, z);
     }
 
     public virtual void CmdStop () {
@@ -64,7 +65,7 @@ public class UnitController : MonoBehaviour {
         });
     }
     public virtual void Stop () {
-        MoveTo (this.transform.position.x, this.transform.position.z);
+        MoveTo (this.transform.position.x, this.transform.position.y, this.transform.position.z);
         rotating = false;
         if (actions.CancelAttack ()) {
             anim.SetIdle ();
