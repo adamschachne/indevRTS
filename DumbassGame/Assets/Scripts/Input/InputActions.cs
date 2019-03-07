@@ -206,16 +206,17 @@ namespace InputActions {
 		public static readonly RTS SELECT_UP = new RTS (1, "SELECT_UP", new ModKey (KeyCode.Mouse0), "Select", InputType.Up, true);
 		public static readonly RTS MOVE = new RTS (2, "Move", new ModKey (KeyCode.Mouse1));
 		public static readonly RTS STOP = new RTS (3, "Stop", new ModKey (KeyCode.S));
-		public static readonly RTS SPAWN_SHOOTGUY = new RTS (4, "Spawn Soldier", new ModKey (KeyCode.Q));
-		public static readonly RTS SPAWN_IRONFOE = new RTS (5, "Spawn Ironfoe", new ModKey (KeyCode.W));
-		public static readonly RTS SPAWN_DOG = new RTS (6, "Spawn Dog", new ModKey (KeyCode.E));
-		public static readonly RTS SPAWN_MORTAR = new RTS (7, "Spawn Mortar (Unimplemented)", new ModKey (KeyCode.R));
-		public static readonly RTS ATTACK = new RTS (8, "Attack", new ModKey (KeyCode.A));
-		public static readonly RTS CONTROL_GROUP_1 = new RTS (9, "Control Group 1", new ModKey (KeyCode.Alpha1), "NONE", InputType.Down, true);
-		public static readonly RTS CONTROL_GROUP_2 = new RTS (10, "Control Group 2", new ModKey (KeyCode.Alpha2), "NONE", InputType.Down, true);
-		public static readonly RTS CONTROL_GROUP_3 = new RTS (11, "Control Group 3", new ModKey (KeyCode.Alpha3), "NONE", InputType.Down, true);
-		public static readonly RTS CONTROL_GROUP_4 = new RTS (12, "Control Group 4", new ModKey (KeyCode.Alpha4), "NONE", InputType.Down, true);
-		public static readonly RTS CONTROL_GROUP_5 = new RTS (13, "Control Group 5", new ModKey (KeyCode.Alpha5), "NONE", InputType.Down, true);
+		public static readonly RTS SPAWN_SHOOTGUY = new RTS (4, "Build Soldier", new ModKey (KeyCode.Q));
+		public static readonly RTS SPAWN_IRONFOE = new RTS (5, "Build Ironfoe", new ModKey (KeyCode.W));
+		public static readonly RTS SPAWN_DOG = new RTS (6, "Build Dog", new ModKey (KeyCode.E));
+		public static readonly RTS SPAWN_MORTAR = new RTS (7, "Build Mortar (Unimplemented)", new ModKey (KeyCode.R));
+		public static readonly RTS CANCEL_BUILD = new RTS (8, "Cancel Build", new ModKey (KeyCode.X));
+		public static readonly RTS ATTACK = new RTS (9, "Attack", new ModKey (KeyCode.A));
+		public static readonly RTS CONTROL_GROUP_1 = new RTS (10, "Control Group 1", new ModKey (KeyCode.Alpha1), "NONE", InputType.Down, true);
+		public static readonly RTS CONTROL_GROUP_2 = new RTS (11, "Control Group 2", new ModKey (KeyCode.Alpha2), "NONE", InputType.Down, true);
+		public static readonly RTS CONTROL_GROUP_3 = new RTS (12, "Control Group 3", new ModKey (KeyCode.Alpha3), "NONE", InputType.Down, true);
+		public static readonly RTS CONTROL_GROUP_4 = new RTS (13, "Control Group 4", new ModKey (KeyCode.Alpha4), "NONE", InputType.Down, true);
+		public static readonly RTS CONTROL_GROUP_5 = new RTS (14, "Control Group 5", new ModKey (KeyCode.Alpha5), "NONE", InputType.Down, true);
 
 		//this variable MUST be named actions
 		//put the const values into the array in the same order you initalized them
@@ -228,6 +229,7 @@ namespace InputActions {
 			SPAWN_IRONFOE,
 			SPAWN_DOG,
 			SPAWN_MORTAR,
+			CANCEL_BUILD,
 			ATTACK,
 			CONTROL_GROUP_1,
 			CONTROL_GROUP_2,

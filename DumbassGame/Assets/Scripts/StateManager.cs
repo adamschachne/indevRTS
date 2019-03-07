@@ -76,6 +76,14 @@ public class StateManager : MonoBehaviour {
     }
     private View lastViewFromMenu;
 
+    //variables for managing building units
+    private bool unitIsBuilding;
+    private EntityType unitToBuild;
+    private float remainingBuildTime;
+    public float soldierBuildTime = 10;
+    public float ironfoeBuildTime = 15;
+    public float dogBuildTime = 5;
+
     // Changed to awake for early init
     void Awake () {
         isServer = false;
@@ -122,12 +130,27 @@ public class StateManager : MonoBehaviour {
         input.Subscribe (SpawnShootGuy, InputActions.RTS.SPAWN_SHOOTGUY);
         input.Subscribe (SpawnIronfoe, InputActions.RTS.SPAWN_IRONFOE);
         input.Subscribe (SpawnDog, InputActions.RTS.SPAWN_DOG);
+        input.Subscribe (CancelBuild, InputActions.RTS.CANCEL_BUILD);
+    }
+
+    void Update () {
+        if (unitIsBuilding) {
+            remainingBuildTime -= Time.deltaTime;
+            gui.UpdateUnitLoad (remainingBuildTime / BuildTime (unitToBuild));
+            if (remainingBuildTime <= 0) {
+                network.requestNewUnit (unitToBuild,
+                    UnityEngine.Random.Range (-3, 3),
+                    UnityEngine.Random.Range (-3, 3));
+                CancelBuild ();
+            }
+        }
     }
 
     // called from NetworkManager
     public void StartGame () {
         CreateTopLevelGameUnits ();
         inGame = true;
+        CancelBuild ();
 
         if (gameView == View.Global)
             gui.KeybindMenu ();
@@ -143,18 +166,28 @@ public class StateManager : MonoBehaviour {
     }
 
     private void SpawnShootGuy () {
-        network.requestNewUnit (EntityType.Soldier,
-            UnityEngine.Random.Range (-3, 3),
-            UnityEngine.Random.Range (-3, 3));
+        SpawnUnit (EntityType.Soldier);
     }
     private void SpawnIronfoe () {
-        network.requestNewUnit (EntityType.Ironfoe,
-            UnityEngine.Random.Range (-3, 3),
-            UnityEngine.Random.Range (-3, 3));
+        SpawnUnit (EntityType.Ironfoe);
     }
     private void SpawnDog () {
-        network.requestNewUnit (EntityType.Dog,
-            UnityEngine.Random.Range (-3, 3), UnityEngine.Random.Range (-3, 3));
+        SpawnUnit (EntityType.Dog);
+    }
+
+    private void SpawnUnit (EntityType type) {
+        if (!unitIsBuilding) {
+            unitIsBuilding = true;
+            unitToBuild = type;
+            remainingBuildTime = BuildTime (type);
+            gui.StartBuildUnit (type);
+        }
+    }
+
+    private void CancelBuild () {
+        unitIsBuilding = false;
+        remainingBuildTime = 0;
+        gui.StopBuildUnit ();
     }
 
     //todo: make this more effecient. you know how.
@@ -322,6 +355,7 @@ public class StateManager : MonoBehaviour {
         isServer = false;
         inGame = false;
         CleanObjects ();
+        CancelBuild ();
         selection.enabled = false;
         //show Lobby UI
         gui.Cleanup ();
@@ -375,6 +409,22 @@ public class StateManager : MonoBehaviour {
     public void AssignStartMap (Voteable v) {
         if (v.GetComponent<MapButton> () != null) {
             gui.mapSelect.SetCurrentMap (v.GetVotableID ());
+        }
+    }
+
+    private float BuildTime (EntityType type) {
+        switch (type) {
+
+            case EntityType.Soldier:
+                return soldierBuildTime;
+            case EntityType.Ironfoe:
+                return ironfoeBuildTime;
+            case EntityType.Dog:
+                return dogBuildTime;
+
+            default:
+                Debug.Log ("You tried to build a: " + type + " don't do that.");
+                return 0;
         }
     }
 }

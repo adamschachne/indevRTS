@@ -49,7 +49,6 @@ public class NetworkManager : MonoBehaviour {
     }
 
     public void OnJoinRoomClicked () {
-        //Setup ();
         // get input value inside field
         string roomName = state.gui.inputField.text;
         // clear input
@@ -256,6 +255,7 @@ public class NetworkManager : MonoBehaviour {
                         Debug.Log ("Server started. Address: " + address);
                         state.gui.MapSelectMenu ();
                         state.gui.mapSelect.init (address);
+
                         break;
                     case NetEventType.ServerInitFailed:
                         state.isServer = false;
@@ -278,6 +278,7 @@ public class NetworkManager : MonoBehaviour {
                         if (!state.isServer) {
                             // currently, the client is always 1 TODO
                             networkID = 1;
+                            state.gui.SetUnitIconPosition (state.isServer);
                             /*
                             if (state.inGame == false) {
                                 Debug.Log ("starting game");

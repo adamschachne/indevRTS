@@ -26,6 +26,10 @@ public class GuiManager : MonoBehaviour {
     private GameObject connectMenu;
     private GameObject RTSGUIParent;
     private GameObject mapSelectParent;
+    [SerializeField]
+    private Sprite[] UnitIcons;
+    private Image unitIcon;
+    private Image unitLoadingBar;
 
     // Use this for initialization
     void Start () {
@@ -39,6 +43,8 @@ public class GuiManager : MonoBehaviour {
         RTSGUIParent = canvas.transform.Find ("RTS GUI").gameObject;
         mapSelectParent = canvas.transform.Find ("MapSelect").gameObject;
         mapSelect = new MapSelect (mapSelectParent);
+        unitIcon = RTSGUIParent.transform.Find ("UnitIcon").GetComponent<Image> ();
+        unitLoadingBar = unitIcon.transform.Find ("RadialLoad").GetComponent<Image> ();
 
         KeybindMenu ();
 
@@ -68,6 +74,15 @@ public class GuiManager : MonoBehaviour {
         connectMenu.SetActive (false);
         RTSGUIParent.SetActive (false);
         mapSelectParent.SetActive (true);
+    }
+
+    public void SetUnitIconPosition (bool isServer) {
+        if (!isServer) {
+            unitIcon.transform.localPosition = new Vector3 (
+                unitIcon.transform.localPosition.x * -1,
+                unitIcon.transform.localPosition.y,
+                unitIcon.transform.localPosition.z);
+        }
     }
 
     public void CreateKeybindButtons (List<List<ActionType>>[] groups, StateManager.View[] gameModes) {
@@ -150,4 +165,34 @@ public class GuiManager : MonoBehaviour {
         }
     }
 
+    public void StartBuildUnit (StateManager.EntityType type) {
+        unitIcon.gameObject.SetActive (true);
+        unitIcon.sprite = UnitIcon (type);
+        unitLoadingBar.fillAmount = 1;
+    }
+
+    public void UpdateUnitLoad (float percentage) {
+        unitLoadingBar.fillAmount = percentage;
+    }
+
+    public void StopBuildUnit () {
+        unitIcon.gameObject.SetActive (false);
+        unitIcon.sprite = null;
+        unitLoadingBar.fillAmount = 0;
+    }
+
+    private Sprite UnitIcon (StateManager.EntityType type) {
+        switch (type) {
+            case StateManager.EntityType.Soldier:
+                return UnitIcons[0];
+            case StateManager.EntityType.Ironfoe:
+                return UnitIcons[1];
+            case StateManager.EntityType.Dog:
+                return UnitIcons[2];
+            default:
+                Debug.Log ("Couldn't return a sprite for unit type: " + type);
+                return null;
+        }
+
+    }
 }
