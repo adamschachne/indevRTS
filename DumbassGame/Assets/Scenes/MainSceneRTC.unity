@@ -2616,7 +2616,6 @@ GameObject:
   - component: {fileID: 1561425930}
   - component: {fileID: 1561425929}
   - component: {fileID: 1561425928}
-  - component: {fileID: 1561425931}
   m_Layer: 5
   m_Name: UnitIcon
   m_TagString: Untagged
@@ -2694,49 +2693,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1561425926}
   m_CullTransparentMesh: 0
---- !u!114 &1561425931
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1561425926}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f05231c086a56a945be4050f5896354d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Name: 
-  m_EditorClassIdentifier: 
-  barDisplay: 0
-  pos: {x: -100, y: -65}
-  size: {x: 200, y: 35}
-  emptyTex: {fileID: 2800000, guid: b916943893d9c1a4ab26e607c645e812, type: 3}
-  fullTex: {fileID: 2800000, guid: 21965b7b0989dc04981cdff06b8da4a2, type: 3}
 --- !u!1 &1595466401
 GameObject:
   m_ObjectHideFlags: 0

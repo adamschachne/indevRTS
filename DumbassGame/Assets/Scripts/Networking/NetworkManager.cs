@@ -164,12 +164,14 @@ public class NetworkManager : MonoBehaviour {
     }
 
     private void SendBatch () {
-        Batch cmdBatch = new Batch {
-            cmds = batch
-        };
+        if (batch.Count > 0) {
+            Batch cmdBatch = new Batch {
+                cmds = batch
+            };
 
-        SendMessage (cmdBatch, false);
-        batch.Clear ();
+            SendMessage (cmdBatch, false);
+            batch.Clear ();
+        }
     }
 
     public void HandleRequestUnit (RequestUnit ru) {

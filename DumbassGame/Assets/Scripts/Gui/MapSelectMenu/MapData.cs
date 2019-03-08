@@ -32,12 +32,12 @@ public class MapData : MonoBehaviour {
         Transform gameAnchors = transform.Find ("GameAnchors");
         for (int i = 1; i <= mapInfo.numberSupportedPlayers; ++i) {
             mapInfo.flagPositions[i - 1] = gameAnchors.Find ("Player" + i + "FlagSpot").position;
-            if (mapInfo.flagPositions[i - 1] == null) {
+            if (mapInfo.flagPositions[i - 1] == Vector3.zero) {
                 Debug.Log ("Could not find flag spot for player: " + i);
             }
 
             mapInfo.unitSpawnPositions[i - 1] = gameAnchors.Find ("Player" + i + "UnitSpawn").position;
-            if (mapInfo.unitSpawnPositions[i - 1] == null) {
+            if (mapInfo.unitSpawnPositions[i - 1] == Vector3.zero) {
                 Debug.Log ("Could not find unit spawn position for player: " + i);
             }
         }

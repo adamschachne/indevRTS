@@ -12,11 +12,10 @@ public class ShowMapPreview : MonoBehaviour {
     public void init (Sprite mapIcon, Image mapPreview, Transform parent) {
         this.mapIcon = mapIcon;
         this.mapPreview = mapPreview;
-        this.transform.parent = parent.parent;
+        this.transform.SetParent (parent.parent);
     }
 
     public void OnPointerEnter () {
-        Debug.Log ("AHHHHHHH");
         mapPreview.sprite = mapIcon;
         mapPreview.rectTransform.sizeDelta = new Vector2 (mapIcon.rect.width, mapIcon.rect.height);
         mapPreview.gameObject.SetActive (true);
