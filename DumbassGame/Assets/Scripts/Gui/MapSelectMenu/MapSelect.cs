@@ -84,6 +84,7 @@ public class MapSelect {
         }
 
         ownerControl.isOn = false;
+        ownerControl.interactable = state.isServer;
 
         if (state.isServer) {
             roomID.text = "Room ID: " + address;
@@ -97,8 +98,6 @@ public class MapSelect {
                 this.mapState.ownerControl = toggleIsOn;
                 SendSync ();
             });
-        } else {
-            ownerControl.interactable = false;
         }
 
     }

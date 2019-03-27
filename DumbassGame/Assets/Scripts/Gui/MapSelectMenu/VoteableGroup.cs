@@ -23,21 +23,23 @@ public class VoteableGroup : MonoBehaviour {
     }
 
     public void RegisterGroupMember (VoteableGroupMember v) {
-        groupMembers.Add (v);
+        if (!groupMembers.Contains (v)) {
+            groupMembers.Add (v);
 
-        sizeDeltaRef.x += v.rt.sizeDelta.x + xBuffer;
-        if (sizeDeltaRef.y - yBuffer < v.rt.sizeDelta.y) {
-            sizeDeltaRef.y = v.rt.sizeDelta.y + yBuffer;
+            sizeDeltaRef.x += v.rt.sizeDelta.x + xBuffer;
+            if (sizeDeltaRef.y - yBuffer < v.rt.sizeDelta.y) {
+                sizeDeltaRef.y = v.rt.sizeDelta.y + yBuffer;
+            }
+            rt.sizeDelta = sizeDeltaRef;
+
+            Vector3 avgPos = new Vector3 ();
+            foreach (VoteableGroupMember vgm in groupMembers) {
+                avgPos += vgm.rt.position;
+            }
+
+            avgPos /= groupMembers.Count;
+            rt.position = avgPos;
         }
-        rt.sizeDelta = sizeDeltaRef;
-
-        Vector3 avgPos = new Vector3 ();
-        foreach (VoteableGroupMember vgm in groupMembers) {
-            avgPos += vgm.rt.position;
-        }
-
-        avgPos /= groupMembers.Count;
-        rt.position = avgPos;
 
     }
 

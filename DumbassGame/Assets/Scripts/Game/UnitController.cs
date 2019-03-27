@@ -9,6 +9,7 @@ public class UnitController : MonoBehaviour {
     [SerializeField]
     private float rotateSpeed = 0.65f;
     private float rotateCounter = 0;
+    private float radius;
     [SerializeField]
     protected int health = 20;
     private bool moving = false;
@@ -29,6 +30,7 @@ public class UnitController : MonoBehaviour {
         anim = GetComponent<AnimationController> ();
         actions = GetComponent<ActionController> ();
         agent = GetComponent<NavMeshAgent> ();
+        radius = GetComponent<CapsuleCollider> ().radius;
         agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
 
         agent.destination = this.transform.position;
@@ -39,7 +41,7 @@ public class UnitController : MonoBehaviour {
     // Called by user
     public virtual void CmdMoveTo (Vector3 targetPos) {
         MoveTo (targetPos.x, targetPos.y, targetPos.z);
-        state.network.SendMessage (new Move {
+        state.network.SendMessage (new MoveSingle {
             id = name,
                 ownerID = state.network.networkID,
                 x = targetPos.x,
@@ -49,28 +51,12 @@ public class UnitController : MonoBehaviour {
     }
     // Called by other users
     public virtual void MoveTo (float x, float y, float z) {
-        if (actions.CancelAttack ()) {
+        rotating = false;
+        if (actions != null && actions.CancelAttack ()) {
             anim.SetIdle ();
             anim.ResetAttack ();
         }
-        rotating = false;
         agent.destination = new Vector3 (x, y, z);
-    }
-
-    public virtual void CmdStop () {
-        Stop ();
-        state.network.SendMessage (new Stop {
-            id = name,
-                ownerID = state.network.networkID
-        });
-    }
-    public virtual void Stop () {
-        MoveTo (this.transform.position.x, this.transform.position.y, this.transform.position.z);
-        rotating = false;
-        if (actions.CancelAttack ()) {
-            anim.SetIdle ();
-            anim.ResetAttack ();
-        }
     }
 
     public void TakeDamage (int damage) {
@@ -140,7 +126,7 @@ public class UnitController : MonoBehaviour {
         }
 
         // check if distance to target is greater than distance threshold
-        if (Vector3.Distance (transform.position, agent.steeringTarget) > 0.1f) {
+        if (Vector3.Distance (transform.position, agent.steeringTarget) > radius) {
             //float step = moveSpeed * Time.deltaTime;
             //transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
             moving = true;
@@ -153,7 +139,7 @@ public class UnitController : MonoBehaviour {
                     rotateCounter += rotateSpeed;
                     this.transform.forward = Vector3.Lerp (this.transform.forward, targetDirection, rotateCounter);
                 } else {
-                    targetDirection = Vector3.zero;
+                    targetDirection = this.transform.position;
                     rotating = false;
                     rotateCounter = 0;
                 }

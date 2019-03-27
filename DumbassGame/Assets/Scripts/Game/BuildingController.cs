@@ -20,7 +20,7 @@ public class BuildingController : UnitController {
 
     public override void CmdMoveTo (Vector3 targetPos) {
         MoveTo (targetPos.x, targetPos.y, targetPos.z);
-        state.network.SendMessage (new Move {
+        state.network.SendMessage (new MoveSingle {
             id = name,
                 ownerID = state.network.networkID,
                 x = targetPos.x,
@@ -32,17 +32,6 @@ public class BuildingController : UnitController {
     // Called by other users
     public override void MoveTo (float x, float y, float z) {
 
-    }
-
-    public override void CmdStop () {
-        Stop ();
-        state.network.SendMessage (new Stop {
-            id = name,
-                ownerID = state.network.networkID
-        });
-    }
-    public override void Stop () {
-        Debug.Log ("Triggered stop on a building.");
     }
 
     private void DestroyThis () {

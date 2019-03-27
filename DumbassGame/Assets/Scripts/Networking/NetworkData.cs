@@ -5,7 +5,7 @@ using UnityEngine;
 
 [Serializable]
 public class Message {
-    public virtual void process () { Debug.Log ("Wrong function was called :("); }
+    public virtual void process () { Debug.Log ("Network Message not typecasted correctly, or Process func not defined."); }
 }
 
 [Serializable]
@@ -17,10 +17,9 @@ public class NetworkUnit : Message {
 
 [Serializable]
 public class SyncUnits : Message {
-    public List<NetworkUnit> units;
+    public NetworkUnit[] units;
     //public short connectionId;
     public override void process () {
-        Debug.Log ("HANDLING SYNC");
         // Client Only
         if (StateManager.state.isServer == true) {
             return;
@@ -40,7 +39,6 @@ public class AddUnit : Message {
     public short ownerID; // the connection that added a unit
     public NetworkUnit unit; // the unit added
     public override void process () {
-        Debug.Log ("HANDLING ADD UNIT");
         // Client Only
         if (StateManager.state.isServer == true) {
             return;
@@ -59,7 +57,7 @@ public class RequestUnit : Message {
 }
 
 [Serializable]
-public class Move : Message {
+public class MoveSingle : Message {
     public string id; // name of the unit that is commanded
     public float x;
     public float y;
@@ -71,12 +69,20 @@ public class Move : Message {
     }
 }
 
-[Serializable]
-public class Stop : Message {
-    public string id;
+public class MoveMany : Message {
+    public string[] ids;
+    public float x;
+    public float y;
+    public float z;
     public short ownerID;
+
     public override void process () {
-        StateManager.state.StopCommand (this.ownerID, this.id);
+        StateManager.state.BlobMove (ids, ownerID, x, y, z);
+        /*
+        foreach(string id in this.ids) {
+            StateManager.state.MoveCommand(this.ownerID, id, this.x, this.y, this.z);
+        }
+        */
     }
 }
 
@@ -115,7 +121,7 @@ public class SyncPos : Message {
 
 [Serializable]
 public class Batch : Message {
-    public List<Message> cmds;
+    public Message[] cmds;
     public override void process () {
         foreach (Message cmd in this.cmds) {
             cmd.process ();

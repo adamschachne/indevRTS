@@ -30,6 +30,7 @@ public class GuiManager : MonoBehaviour {
     private Sprite[] UnitIcons;
     private Image unitIcon;
     private Image unitLoadingBar;
+    private float unitIconPosition;
 
     // Use this for initialization
     void Start () {
@@ -45,7 +46,7 @@ public class GuiManager : MonoBehaviour {
         mapSelect = new MapSelect (mapSelectParent);
         unitIcon = RTSGUIParent.transform.Find ("UnitIcon").GetComponent<Image> ();
         unitLoadingBar = unitIcon.transform.Find ("RadialLoad").GetComponent<Image> ();
-
+        unitIconPosition = unitIcon.transform.localPosition.x;
         KeybindMenu ();
 
         for (int i = 1; i <= 4; ++i) {
@@ -77,12 +78,10 @@ public class GuiManager : MonoBehaviour {
     }
 
     public void SetUnitIconPosition (bool isServer) {
-        if (!isServer) {
-            unitIcon.transform.localPosition = new Vector3 (
-                unitIcon.transform.localPosition.x * -1,
-                unitIcon.transform.localPosition.y,
-                unitIcon.transform.localPosition.z);
-        }
+        unitIcon.transform.localPosition = new Vector3 (
+            (isServer) ? unitIconPosition : unitIconPosition * -1,
+            unitIcon.transform.localPosition.y,
+            unitIcon.transform.localPosition.z);
     }
 
     public void CreateKeybindButtons (List<List<ActionType>>[] groups, StateManager.View[] gameModes) {

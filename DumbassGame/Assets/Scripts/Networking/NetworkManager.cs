@@ -145,7 +145,7 @@ public class NetworkManager : MonoBehaviour {
             }
         }
 
-        syncData.units = netUnits;
+        syncData.units = netUnits.ToArray ();
 
         // send the new unit to connections
         SendMessage (syncData);
@@ -166,7 +166,7 @@ public class NetworkManager : MonoBehaviour {
     private void SendBatch () {
         if (batch.Count > 0) {
             Batch cmdBatch = new Batch {
-                cmds = batch
+                cmds = batch.ToArray ()
             };
 
             SendMessage (cmdBatch, false);
@@ -222,7 +222,7 @@ public class NetworkManager : MonoBehaviour {
         buffer.Dispose ();
     }
 
-    public void requestNewUnit (StateManager.EntityType unitType, float x, float z) {
+    public void requestNewUnit (StateManager.EntityType unitType) {
         if (state.isServer) {
             RequestUnit req = new RequestUnit ();
             req.ownerID = networkID;
@@ -255,6 +255,7 @@ public class NetworkManager : MonoBehaviour {
                         string address = evt.Info;
                         state.gui.roomID.text = "Room ID: " + address;
                         Debug.Log ("Server started. Address: " + address);
+                        state.gui.SetUnitIconPosition (state.isServer);
                         state.gui.MapSelectMenu ();
                         state.gui.mapSelect.init (address);
 
@@ -281,12 +282,6 @@ public class NetworkManager : MonoBehaviour {
                             // currently, the client is always 1 TODO
                             networkID = 1;
                             state.gui.SetUnitIconPosition (state.isServer);
-                            /*
-                            if (state.inGame == false) {
-                                Debug.Log ("starting game");
-                                state.StartGame ();
-                            }
-                            */
                             SendMessage (new Connected {
                                 playerID = networkID
                             });

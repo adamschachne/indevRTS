@@ -1156,7 +1156,7 @@ MonoBehaviour:
   currentMap: {fileID: 0}
   soldierBuildTime: 10
   ironfoeBuildTime: 15
-  dogBuildTime: 5
+  dogBuildTime: 1
 --- !u!4 &687881488
 Transform:
   m_ObjectHideFlags: 0

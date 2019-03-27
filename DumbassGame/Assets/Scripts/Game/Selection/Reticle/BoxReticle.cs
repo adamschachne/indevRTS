@@ -83,14 +83,16 @@ public class BoxReticle : Reticle {
 
 			try {
 				if (closest != null && closest.transform.parent != null) {
-					string netID = closest.transform.parent.gameObject.name;
-					short ID = short.Parse (netID.Remove (0, 3));
-					StateManager.state.network.SendMessage (new Damage {
-						id = closest.name,
-							ownerID = ID,
-							damage = this.damage
-					}, false);
-					StateManager.state.DamageUnit (ID, closest.name, this.damage);
+					if (closest.GetComponent<UnitController> ().type != StateManager.EntityType.Ironfoe) {
+						string netID = closest.transform.parent.gameObject.name;
+						short ID = short.Parse (netID.Remove (0, 3));
+						StateManager.state.network.SendMessage (new Damage {
+							id = closest.name,
+								ownerID = ID,
+								damage = this.damage
+						}, false);
+						StateManager.state.DamageUnit (ID, closest.name, this.damage);
+					}
 				}
 				Destroy (this.gameObject);
 			} catch (System.NullReferenceException e) {

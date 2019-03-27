@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 // Maintains simple-to-access state variables
@@ -62,7 +63,9 @@ public class StateManager : MonoBehaviour {
     public MapData currentMap;
     [ReadOnly]
     public Dictionary<short, int> unitCounts; // map network id to count
-    private Dictionary<string, GameObject> unitLookup;
+    private Dictionary<string, UnitController> unitLookup;
+    private Transform[] unitLists;
+    private Transform[] objectLists;
     private static StateManager s;
     [HideInInspector]
     public static StateManager state {
@@ -90,7 +93,7 @@ public class StateManager : MonoBehaviour {
         gameView = View.Lobby;
         inGame = false;
         unitCounts = new Dictionary<short, int> ();
-        unitLookup = new Dictionary<string, GameObject> ();
+        unitLookup = new Dictionary<string, UnitController> ();
 
         if (!guyPrefab) {
             throw new System.Exception ("No Guy defined");
@@ -138,9 +141,7 @@ public class StateManager : MonoBehaviour {
             remainingBuildTime -= Time.deltaTime;
             gui.UpdateUnitLoad (remainingBuildTime / BuildTime (unitToBuild));
             if (remainingBuildTime <= 0) {
-                network.requestNewUnit (unitToBuild,
-                    UnityEngine.Random.Range (-3, 3),
-                    UnityEngine.Random.Range (-3, 3));
+                network.requestNewUnit (unitToBuild);
                 CancelBuild ();
             }
         }
@@ -162,6 +163,14 @@ public class StateManager : MonoBehaviour {
         // zero out each player's points
         points = new int[4];
         currentMap = Instantiate (gui.mapSelect.GetMapData ().gameObject, this.transform).GetComponent<MapData> ();
+        unitLists = new Transform[currentMap.mapInfo.numberSupportedPlayers];
+        objectLists = new Transform[currentMap.mapInfo.numberSupportedPlayers];
+        for (int i = 0; i < currentMap.mapInfo.numberSupportedPlayers; i++) {
+            unitLists[i] = Instantiate (gameUnitsPrefab, gameUnits.transform).GetComponent<Transform> ();
+            unitLists[i].gameObject.name = "GU-" + i;
+            objectLists[i] = Instantiate (gameUnitsPrefab, gameUnits.transform).GetComponent<Transform> ();
+            objectLists[i].gameObject.name = "IO-" + i;
+        }
 
     }
 
@@ -190,32 +199,6 @@ public class StateManager : MonoBehaviour {
         gui.StopBuildUnit ();
     }
 
-    //todo: make this more effecient. you know how.
-    private GameObject GetNetUserGameUnits (short netID) {
-        string myGameUnitsName = "GU-" + netID;
-        foreach (var child in gameUnits.GetComponentsInChildren<Transform> ()) {
-            if (child.name.Equals (myGameUnitsName)) {
-                return child.gameObject;
-            }
-        }
-        GameObject newGameUnits = Instantiate (gameUnitsPrefab, gameUnits.transform);
-        newGameUnits.name = myGameUnitsName;
-        return newGameUnits;
-    }
-
-    //todo: make this more effecient. you know how.
-    private GameObject GetNetUserInteractableObjects (short netID) {
-        string myGameUnitsName = "IO-" + netID;
-        foreach (var child in gameUnits.GetComponentsInChildren<Transform> ()) {
-            if (child.name.Equals (myGameUnitsName)) {
-                return child.gameObject;
-            }
-        }
-        GameObject newGameUnits = Instantiate (gameUnitsPrefab, gameUnits.transform);
-        newGameUnits.name = myGameUnitsName;
-        return newGameUnits;
-    }
-
     private int GetNextUnitCount (short netID) {
         if (unitCounts.ContainsKey (netID) == false) {
             unitCounts.Add (netID, 0);
@@ -230,42 +213,43 @@ public class StateManager : MonoBehaviour {
 
     public GameObject addUnit (short netID, EntityType unitType, string name = null) {
         // get my game units
-        GameObject myUnits = GetNetUserGameUnits (netID);
+        Transform myUnits = unitLists[netID];
         // create a fucking guy in the gameUnits
         GameObject unit;
 
         Vector3 unitSpawnPositions;
         Vector3 xyzPosition;
+        int unitNum = GetNextUnitCount (netID);
 
         if (unitType == EntityType.FlagPlatform) {
             xyzPosition = currentMap.mapInfo.flagPositions[netID];
         } else {
             unitSpawnPositions = currentMap.mapInfo.unitSpawnPositions[netID];
-            xyzPosition = new Vector3 (unitSpawnPositions.x + UnityEngine.Random.Range (-2, 2),
+            xyzPosition = new Vector3 (unitSpawnPositions.x + (-2 + (unitNum % 16) % 4),
                 unitSpawnPositions.y,
-                unitSpawnPositions.z + UnityEngine.Random.Range (-2, 2));
+                unitSpawnPositions.z + (-2 + (unitNum % 16) / 4));
         }
 
         switch (unitType) {
             case EntityType.Barracks:
                 xyzPosition.y += barracks.transform.position.y;
-                unit = Instantiate (barracks, xyzPosition, barracks.transform.rotation, myUnits.transform);
+                unit = Instantiate (barracks, xyzPosition, barracks.transform.rotation, myUnits);
                 break;
 
             case EntityType.Soldier:
             default:
                 xyzPosition.y += guyPrefab.transform.position.y;
-                unit = Instantiate (guyPrefab, xyzPosition, guyPrefab.transform.rotation, myUnits.transform);
+                unit = Instantiate (guyPrefab, xyzPosition, guyPrefab.transform.rotation, myUnits);
                 break;
 
             case EntityType.Ironfoe:
                 xyzPosition.y += ironfoePrefab.transform.position.y;
-                unit = Instantiate (ironfoePrefab, xyzPosition, ironfoePrefab.transform.rotation, myUnits.transform);
+                unit = Instantiate (ironfoePrefab, xyzPosition, ironfoePrefab.transform.rotation, myUnits);
                 break;
 
             case EntityType.FlagPlatform:
                 xyzPosition.y += flagPlatformPrefab.transform.position.y;
-                unit = Instantiate (flagPlatformPrefab, xyzPosition, flagPlatformPrefab.transform.rotation, GetNetUserInteractableObjects (netID).transform);
+                unit = Instantiate (flagPlatformPrefab, xyzPosition, flagPlatformPrefab.transform.rotation, objectLists[netID]);
                 return unit;
 
             case EntityType.Flag:
@@ -279,66 +263,103 @@ public class StateManager : MonoBehaviour {
         }
         unit.layer = 10 + netID;
         if (name == null) {
-            unit.name = GetNextUnitCount (netID).ToString ();
+            unit.name = unitNum.ToString ();
         } else {
             unit.name = name;
         }
 
-        unitLookup.Add (myUnits.name + unit.name, unit);
+        unit.GetComponent<UnityEngine.AI.NavMeshAgent> ().destination = xyzPosition;
+        unitLookup.Add (myUnits.gameObject.name + unit.name, unit.GetComponent<UnitController> ());
 
         return unit;
     }
 
     public void MoveCommand (short ownerID, string name, float x, float y, float z) {
-        GameObject units = GetNetUserGameUnits (ownerID);
-
-        GameObject unit;
-        if (unitLookup.TryGetValue (units.name + name, out unit)) {
-            unit.GetComponent<UnitController> ().MoveTo (x, y, z);
+        Transform units = unitLists[ownerID];
+        UnitController unit;
+        if (unitLookup.TryGetValue (units.gameObject.name + name, out unit)) {
+            unit.MoveTo (x, y, z);
         } else {
-            Debug.Log ("Unit with name: " + units.name + name + " was not found!");
+            Debug.Log ("Unit with name: " + units.gameObject.name + name + " was not found!");
         }
     }
 
-    public void StopCommand (short ownerID, string name) {
-        GameObject units = GetNetUserGameUnits (ownerID);
-        GameObject unit;
-        if (unitLookup.TryGetValue (units.name + name, out unit)) {
-            unit.GetComponent<UnitController> ().Stop ();
-        } else {
-            Debug.Log ("Unit with name: " + units.name + name + " was not found!");
+    public void BlobMove (string[] ids, short ownerID, float x, float y, float z) {
+        //units list will be used to calc midpoint and stuff
+        UnitController[] units = new UnitController[ids.Length];
+        string listName = unitLists[ownerID].gameObject.name;
+        UnitController unit;
+
+        //magic box
+        float left = float.MaxValue, bot = float.MaxValue;
+        float right = float.MinValue, top = float.MinValue;
+
+        Vector3 center = Vector3.zero;
+        int numFound = 0;
+        for (int i = 0; i < ids.Length; ++i) {
+            if (unitLookup.TryGetValue (listName + ids[i], out unit)) {
+                Vector3 pos = unit.transform.position;
+                ++numFound;
+                units[i] = unit;
+                center += pos;
+
+                //check box bounds
+                if (pos.x < left) left = pos.x;
+                if (pos.x > right) right = pos.x;
+                if (pos.z < bot) bot = pos.z;
+                if (pos.z > top) top = pos.z;
+
+            }
         }
+
+        //check if any units were null and amend units array
+        if (numFound < units.Length) {
+            units = units.Where (c => c != null).ToArray ();
+        }
+
+        center /= numFound;
+        //if moveTo point is outside magic box...
+        if (x < left || x > right || z > top || z < bot) {
+            //calculate offsets of each unit from center and move to those offsets
+            for (int i = 0; i < units.Length; ++i) {
+                units[i].MoveTo (x + (units[i].transform.position.x - center.x), y, z + (units[i].transform.position.z - center.z));
+            }
+        } else {
+            foreach (UnitController u in units) {
+                u.MoveTo (x, y, z);
+            }
+        }
+
     }
 
     public void AttackCommand (short ownerID, string name, float x, float z) {
-        GameObject units = GetNetUserGameUnits (ownerID);
-        GameObject unit;
-        if (unitLookup.TryGetValue (units.name + name, out unit)) {
-            unit.GetComponent<UnitController> ().Attack (x, z);
+        Transform units = unitLists[ownerID];
+        UnitController unit;
+        if (unitLookup.TryGetValue (units.gameObject.name + name, out unit)) {
+            unit.Attack (x, z);
         } else {
-            Debug.Log ("Unit with name: " + units.name + name + " was not found!");
+            Debug.Log ("Unit with name: " + units.gameObject.name + name + " was not found!");
         }
     }
 
     public void DamageUnit (short ownerID, string name, int damage) {
-        GameObject units = GetNetUserGameUnits (ownerID);
-        GameObject unit;
-        if (unitLookup.TryGetValue (units.name + name, out unit)) {
-            unit.GetComponent<UnitController> ().TakeDamage (damage);
+        Transform units = unitLists[ownerID];
+        UnitController unit;
+        if (unitLookup.TryGetValue (units.gameObject.name + name, out unit)) {
+            unit.TakeDamage (damage);
         } else {
-            Debug.Log ("Unit from player: " + units.name + "with name: " + name + " was not found!");
+            Debug.Log ("Unit from player: " + units.gameObject.name + "with name: " + name + " was not found!");
         }
 
     }
 
     public void SyncPos (short ownerID, string name, float x, float z) {
-        GameObject units = GetNetUserGameUnits (ownerID);
-        GameObject unit;
-        if (unitLookup.TryGetValue (units.name + name, out unit)) {
-            //Debug.Log("Trying to sync unit: " + units.name+name);
-            unit.GetComponent<UnitController> ().SyncPos (x, z);
+        Transform units = unitLists[ownerID];
+        UnitController unit;
+        if (unitLookup.TryGetValue (units.gameObject.name + name, out unit)) {
+            unit.SyncPos (x, z);
         } else {
-            Debug.Log ("Unit with name: " + units.name + name + " was not found!");
+            Debug.Log ("Unit with name: " + units.gameObject.name + name + " was not found!");
         }
     }
 
