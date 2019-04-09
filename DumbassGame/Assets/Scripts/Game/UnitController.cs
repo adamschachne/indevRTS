@@ -72,8 +72,8 @@ public class UnitController : MonoBehaviour {
         if (GetComponent<SoldierActions> () != null &&
             (flag = GetComponentInChildren<FlagActions> ()) != null) {
             flag.getDropped ();
-            flag.transform.position = new Vector3 (transform.position.x, 0, transform.position.z);
-        } else if (flag == null) { }
+            flag.transform.position = new Vector3 (transform.position.x, transform.position.y, transform.position.z);
+        }
 
         Destroy (this.gameObject);
     }
@@ -84,6 +84,7 @@ public class UnitController : MonoBehaviour {
         rotating = true;
     }
 
+    /*
     public virtual void CmdAttack (Vector3 targetPos) {
         Attack (targetPos.x, targetPos.z);
         state.network.SendMessage (new Attack {
@@ -93,11 +94,16 @@ public class UnitController : MonoBehaviour {
                 z = targetPos.z
         });
     }
+    */
+
+    public void ShowTeaserAttack(float x, float z, bool enabled) {
+        actions.ShowTeaserReticle(Vector3.Normalize (new Vector3 (x, transform.position.y, z) - transform.position), enabled);
+    }
 
     public virtual void Attack (float x, float z) {
         RotateTowards (x, z);
         anim.SetAttack ();
-        actions.Attack (new Vector3 (x, transform.position.y, z), targetDirection);
+        actions.Attack (targetDirection);
     }
 
     public virtual void CmdSyncPos () {

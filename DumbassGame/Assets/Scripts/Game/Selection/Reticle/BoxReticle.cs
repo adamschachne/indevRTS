@@ -46,7 +46,9 @@ public class BoxReticle : Reticle {
 		if (height != projHeight) height = projHeight;
 	}
 
-	private void updateValues () {
+	public void updateValues () {
+		if (width != projWidth) width = projWidth;
+		if (height != projHeight) height = projHeight;
 		setProj ();
 		setCollider ();
 	}

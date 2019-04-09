@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 381e896d61c25fa48b99f89b9108d03f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 3
+  type: 5
 --- !u!114 &8923684135341897600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -121,4 +121,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   flagPrefab: {fileID: 2534213222364056252, guid: 4cf4dee0cad6b2b42ae7873e19f21b60,
     type: 3}
+  flagIsHome: 0
   platformRenderer: {fileID: 8923684135341897605}

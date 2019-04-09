@@ -7,8 +7,6 @@ public class UnregisterGraphicFromRaycasting : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		this.transform.SetParent (StateManager.state.gui.keybindMenu.transform);
-		transform.SetAsFirstSibling ();
 		GraphicRegistry.UnregisterGraphicForCanvas (StateManager.state.gui.canvas, GetComponent<Graphic> ());
 	}
 

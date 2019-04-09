@@ -6,10 +6,16 @@ public abstract class ActionController : MonoBehaviour {
 
 	public GameObject hitReticle;
 	
-	public virtual void Attack(Vector3 attackPos, Vector3 targetDirection)
+	public virtual void Attack(Vector3 targetDirection)
 	{
 
 	}
+
+	public virtual void ShowTeaserReticle(Vector3 targetDirection, bool enabled) {
+
+	}
+
+	
 
 	public virtual bool CancelAttack()
 	{

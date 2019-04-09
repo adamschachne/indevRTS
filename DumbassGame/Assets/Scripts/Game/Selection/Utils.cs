@@ -15,11 +15,11 @@ public static class Utils {
             return _whiteTexture;
         }
     }
-
     public static void DrawScreenRect(Rect rect, Color color) {
         GUI.color = color;
         GUI.DrawTexture(rect, WhiteTexture);
         GUI.color = Color.white;
+        
     }
 
     public static void DrawScreenRectBorder(Rect rect, float thickness, Color color) {

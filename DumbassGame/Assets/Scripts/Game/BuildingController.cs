@@ -41,7 +41,7 @@ public class BuildingController : UnitController {
         Destroy (this.gameObject);
     }
 
-    public override void CmdAttack (Vector3 targetPos) { }
+    //public override void CmdAttack (Vector3 targetPos) { }
 
     public override void Attack (float x, float z) { }
 

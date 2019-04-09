@@ -8,14 +8,20 @@ public class SoldierActions : ActionController {
 	public float attackHeight;
 	public float attackDelayInSeconds;
 	public int attackDamage;
-	private float currentDelay;
-
+	private BoxReticle teaserReticle;
+	
 	private GameObject lastAttack;
-	void Update () {
-
+	void Start() {
+		teaserReticle = Instantiate(hitReticle, this.transform.parent).GetComponent<BoxReticle>();
+		teaserReticle.projWidth = attackWidth;
+		teaserReticle.projHeight = attackHeight;
+		teaserReticle.ignoreLayer = gameObject.layer;
+		teaserReticle.name = "TeaserReticle";
+		teaserReticle.updateValues();
+		teaserReticle.Disable();
+		teaserReticle.gameObject.SetActive(false);
 	}
-
-	override public void Attack (Vector3 attackPos, Vector3 targetDirection) {
+	override public void Attack (Vector3 targetDirection) {
 		GameObject hit = Instantiate (hitReticle);
 		lastAttack = hit;
 		BoxReticle reticle = hit.GetComponent<BoxReticle> ();
@@ -36,6 +42,31 @@ public class SoldierActions : ActionController {
 			Vector3.Normalize (targetDirection) * (0.75f + reticle.projHeight / 2) + //offset by height/2
 			Vector3.up * reticle.transform.position.y; //raise above platform
 	}
+
+	override public void ShowTeaserReticle(Vector3 targetDirection, bool enabled) {
+		if(enabled) {
+			teaserReticle.gameObject.SetActive(true);
+			teaserReticle.Disable();
+			teaserReticle.transform.SetParent(this.transform);
+			teaserReticle.transform.localPosition = hitReticle.transform.localPosition;
+			//set rotation of reticle to be pointing towards target direction
+			teaserReticle.transform.rotation = Quaternion.LookRotation (targetDirection);
+			teaserReticle.transform.eulerAngles = new Vector3 (90, teaserReticle.transform.eulerAngles.y, teaserReticle.transform.eulerAngles.z);
+
+			//set position of reticle to be slightly offset from this unit
+			teaserReticle.transform.SetParent (this.transform.parent);
+			
+			teaserReticle.transform.position = this.transform.position + //center on unit
+			Vector3.Normalize (targetDirection) * (0.75f + teaserReticle.projHeight / 2) + //offset by height/2
+			Vector3.up * hitReticle.transform.position.y; //raise above platform
+				
+		} else {
+			teaserReticle.gameObject.SetActive(false);
+		}
+
+	}
+
+	
 
 	override public bool CancelAttack () {
 		if (lastAttack != null) {

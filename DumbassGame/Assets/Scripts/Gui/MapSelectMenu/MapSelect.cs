@@ -8,7 +8,7 @@ public class MapSelect {
     private StateManager state;
     private GuiManager gui;
     private NetworkManager network;
-    private GameObject[] players;
+    private Text[] players;
     private Toggle ownerControl;
     private Text roomID;
     private Transform mapButtonParent;
@@ -47,10 +47,10 @@ public class MapSelect {
         state = StateManager.state;
         gui = state.gui;
         network = state.network;
-        players = new GameObject[4];
+        players = new Text[4];
         GameObject playerList = mapSelectMenu.transform.Find ("Player List").gameObject;
         for (int i = 0; i < 4; ++i) {
-            players[i] = playerList.transform.GetChild (i).gameObject;
+            players[i] = playerList.transform.GetChild (i).GetComponent<Text>();
         }
         ownerControl = mapSelectMenu.transform.Find ("Owner Control").GetComponent<Toggle> ();
         roomID = mapSelectMenu.transform.Find ("RoomID").GetComponent<Text> ();
@@ -89,10 +89,7 @@ public class MapSelect {
         if (state.isServer) {
             roomID.text = "Room ID: " + address;
             mapState.connectedPlayers[0] = true;
-            players[0].SetActive (true);
-            players[1].SetActive (false);
-            players[2].SetActive (false);
-            players[3].SetActive (false);
+            SetPlayerConnected(0, true);
 
             ownerControl.onValueChanged.AddListener (delegate (bool toggleIsOn) {
                 this.mapState.ownerControl = toggleIsOn;
@@ -115,10 +112,18 @@ public class MapSelect {
         }
     }
 
+    private void SetPlayerConnected(short id, bool isConnected) {
+        if(isConnected) {
+            players[id].color = GuiManager.GetColorByNetID(id);
+        } else {
+            players[id].color = new Color(115, 115, 115, 115);
+        }
+        mapState.connectedPlayers[id] = isConnected;
+    }
+
     public void RecieveConnected (short playerid) {
         if (state.isServer) {
-            players[playerid].SetActive (true);
-            mapState.connectedPlayers[playerid] = true;
+            SetPlayerConnected(playerid, true);
             SendSync ();
         }
     }
@@ -138,8 +143,8 @@ public class MapSelect {
     public void RecieveSync (MapSelectState mapState) {
         if (!state.isServer) {
             this.mapState.MirrorState (mapState);
-            for (int i = 0; i < 4; ++i) {
-                players[i].SetActive (mapState.connectedPlayers[i]);
+            for (short i = 0; i < 4; ++i) {
+                SetPlayerConnected(i, mapState.connectedPlayers[i]);
             }
             ownerControl.isOn = mapState.ownerControl;
         }

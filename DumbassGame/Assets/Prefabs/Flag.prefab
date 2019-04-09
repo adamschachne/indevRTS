@@ -138,7 +138,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 381e896d61c25fa48b99f89b9108d03f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 4
+  type: 6
 --- !u!54 &2534213222364056248
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -167,6 +167,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fccb38eeeb5e714992d9c1303938c21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  carried: 0
   flagBox: {fileID: 2534213221765784035}
 --- !u!1 &2534213222950103164
 GameObject:

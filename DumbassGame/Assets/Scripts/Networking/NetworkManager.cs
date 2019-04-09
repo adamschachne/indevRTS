@@ -186,7 +186,7 @@ public class NetworkManager : MonoBehaviour {
         // if they can, make a unit and send an addUnit message out
         short netID = ru.ownerID;
         StateManager.EntityType unitType = ru.unitType;
-        GameObject unit = state.addUnit (netID, unitType, null);
+        GameObject unit = state.AddUnit (netID, unitType, null);
 
         AddUnit addUnit = new AddUnit ();
         addUnit.ownerID = netID;

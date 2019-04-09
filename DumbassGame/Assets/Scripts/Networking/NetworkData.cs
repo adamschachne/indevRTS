@@ -27,7 +27,7 @@ public class SyncUnits : Message {
 
         foreach (NetworkUnit netUnit in this.units) {
             short ownerID = netUnit.ownerID;
-            StateManager.state.addUnit (ownerID, netUnit.unitType, netUnit.id);
+            StateManager.state.AddUnit (ownerID, netUnit.unitType, netUnit.id);
         }
 
         StateManager.state.ResetScores ();
@@ -43,7 +43,7 @@ public class AddUnit : Message {
         if (StateManager.state.isServer == true) {
             return;
         }
-        StateManager.state.addUnit (this.ownerID, this.unit.unitType, this.unit.id);
+        StateManager.state.AddUnit (this.ownerID, this.unit.unitType, this.unit.id);
     }
 }
 
@@ -86,6 +86,7 @@ public class MoveMany : Message {
     }
 }
 
+/*
 [Serializable]
 public class Attack : Message {
     public string id;
@@ -96,6 +97,25 @@ public class Attack : Message {
         StateManager.state.AttackCommand (this.ownerID, this.id, this.x, this.z);
     }
 }
+*/
+
+[Serializable]
+public class AttackMany : Message {
+    public string[] ids;
+    public short ownerID;
+    public float x;
+    public float z;
+    public bool relative;
+    public override void process () {
+        if(this.relative) {
+            StateManager.state.RelativeAttack(ids, ownerID, x, z);
+        } else {
+            foreach(string id in this.ids) {
+                StateManager.state.AttackCommand (this.ownerID, id, this.x, this.z);
+            }
+        }
+    }
+}
 
 [Serializable]
 public class Damage : Message {
@@ -103,7 +123,6 @@ public class Damage : Message {
     public short ownerID;
     public int damage;
     public override void process () {
-        Debug.Log ("Recieved Damage signal. Processing Damage Unit.");
         StateManager.state.DamageUnit (this.ownerID, this.id, this.damage);
     }
 }

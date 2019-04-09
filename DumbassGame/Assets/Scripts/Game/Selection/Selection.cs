@@ -10,36 +10,37 @@ public class Selection : MonoBehaviour {
     HashSet<GameObject>[] controlGroups;
     List<ActionType> controlGroupTypes;
     bool leftClickHeld;
-    bool attacking;
-    enum Mode { None, Remove, Add };
- Mode selectionMode;
- Vector3 mousePositionInitial;
- Vector3[] selFrustumCorners;
- public LayerMask movementLayerMask;
- const float MIN_LENGTH = 0.0005f;
- private StateManager state;
- Camera mainCamera;
+    enum Mode {None,Remove,Add};
+    Mode selectionMode;
+    Vector3 mousePositionInitial;
+    Vector3[] selFrustumCorners;
+    public LayerMask movementLayerMask;
+    const float MIN_LENGTH = 0.0005f;
+    private bool[] filter;
+    private StateManager state;
+    Camera mainCamera;
 
- // Use this for initialization
- void Start () {
- state = StateManager.state;
- mousePositionInitial = new Vector3 (0.0f, 0.0f, 0.0f);
- movementLayerMask = 1 << LayerMask.NameToLayer ("Ground");
- state.input.Subscribe (SelectDown, RTS.SELECT_DOWN);
- state.input.Subscribe (SelectUp, RTS.SELECT_UP);
- state.input.Subscribe (Move, RTS.MOVE);
- state.input.Subscribe (Stop, RTS.STOP);
- state.input.Subscribe (ToggleAttackOn, RTS.ATTACK);
- state.input.Subscribe (ControlGroup, RTS.CONTROL_GROUP_1);
+        // Use this for initialization
+    void Start () {
+        state = StateManager.state;
+        mousePositionInitial = new Vector3 (0.0f, 0.0f, 0.0f);
+        movementLayerMask = 1 << LayerMask.NameToLayer ("Ground");
+        state.input.Subscribe (SelectDown, RTS.SELECT_DOWN);
+        state.input.Subscribe (SelectUp, RTS.SELECT_UP);
+        state.input.Subscribe (Move, RTS.MOVE);
+        state.input.Subscribe (Stop, RTS.STOP);
+        state.input.Subscribe (TeaseAttack, RTS.TEASE_ATTACK);
+        state.input.Subscribe (Attack, RTS.ATTACK);
+        state.input.Subscribe (ControlGroup, RTS.CONTROL_GROUP_1);
+        filter = new bool[4];
 
- controlGroupTypes = state.input.getTaggedActions ("Control Group", typeof (RTS));
- attacking = false;
+        controlGroupTypes = state.input.getTaggedActions ("Control Group", typeof (RTS));
 
- controlGroups = new HashSet<GameObject>[controlGroupTypes.Count];
- for (int i = 0; i < controlGroups.Length; ++i) {
- controlGroups[i] = new HashSet<GameObject> ();
- state.input.Subscribe (ControlGroup, controlGroupTypes[i]);
- mainCamera = Camera.main;
+        controlGroups = new HashSet<GameObject>[controlGroupTypes.Count];
+        for (int i = 0; i < controlGroups.Length; ++i) {
+            controlGroups[i] = new HashSet<GameObject> ();
+            state.input.Subscribe (ControlGroup, controlGroupTypes[i]);
+            mainCamera = Camera.main;
         }
     }
 
@@ -47,14 +48,12 @@ public class Selection : MonoBehaviour {
         leftClickHeld = false;
         selectionMode = Mode.None;
         selectedUnits = new HashSet<GameObject> ();
-        attacking = false;
     }
 
     private void OnDisable () {
         leftClickHeld = false;
         selectionMode = Mode.None;
         selectedUnits.Clear ();
-        attacking = false;
     }
 
     // Update is called once per frame
@@ -66,6 +65,13 @@ public class Selection : MonoBehaviour {
             selectionMode = Mode.Remove;
         } else {
             selectionMode = Mode.None;
+        }
+
+        if(leftClickHeld) {
+            filter[(int)StateManager.EntityType.Soldier] = Input.GetKey(InputActions.RTS.SPAWN_SHOOTGUY.currentKey.key);
+            filter[(int)StateManager.EntityType.Ironfoe] = Input.GetKey(InputActions.RTS.SPAWN_IRONFOE.currentKey.key);
+            filter[(int)StateManager.EntityType.Dog] = Input.GetKey(InputActions.RTS.SPAWN_DOG.currentKey.key);
+            filter[(int)StateManager.EntityType.Mortar] = Input.GetKey(InputActions.RTS.SPAWN_MORTAR.currentKey.key);
         }
 
         /* DEBUG RAY */
@@ -81,9 +87,16 @@ public class Selection : MonoBehaviour {
     void OnGUI () {
         if (leftClickHeld) {
             // Create a rect from both mouse positions
-            var rect = Utils.GetScreenRect (mousePositionInitial, Input.mousePosition);
+            Rect rect = Utils.GetScreenRect (mousePositionInitial, Input.mousePosition);
             Utils.DrawScreenRect (rect, new Color (0.8f, 0.8f, 0.95f, 0.25f));
             Utils.DrawScreenRectBorder (rect, 2, new Color (0.8f, 0.8f, 0.95f));
+            //Debug.Log(mousePositionInitial + ", " + Input.mousePosition);
+            
+            //Vector2 centerOfRect = new Vector2(((mousePositionInitial.x + Input.mousePosition.x)/2) - Screen.width/2, ((mousePositionInitial.y + Input.mousePosition.y)/2) - Screen.height/2);
+            //Vector2 centerOfRect = mainCamera.ScreenToViewportPoint(centerOfRect);
+            //Vector2 centerOfRect = new Vector2(mousePositionInitial.x - Screen.width/2, mousePositionInitial.y - Screen.height/2);
+
+            state.gui.SelectionFilter(filter);
 
             /* DEBUG RAY */
             //float x = rect.x / Screen.width;
@@ -103,9 +116,12 @@ public class Selection : MonoBehaviour {
             //}
             /* END DEBUG RAY */
         }
+        else {
+            state.gui.DisableSelectionFilter();
+        }
     }
 
-    public List<GameObject> withinSelectionBounds (Selectable[] selObjects) {
+    private List<GameObject> WithinSelectionBounds (Selectable[] selObjects) {
         var rect = Utils.GetScreenRect (mousePositionInitial, Input.mousePosition);
         //Bounds viewportBounds = Utils.GetViewportBounds(mainCamera, mousePositionInitial, Input.mousePosition);
 
@@ -191,42 +207,6 @@ public class Selection : MonoBehaviour {
     }
 
     private void Move () {
-        if (attacking) {
-            attacking = false;
-        } else {
-            RaycastHit hitInfo = new RaycastHit ();
-
-            if (Physics.Raycast (mainCamera.ScreenPointToRay (Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
-                //if ((Physics.Raycast(mainCamera.ScreenPointToRay(Input.mousePosition), out hitInfo))) {
-                GameObject obj = hitInfo.transform.gameObject;
-
-                if (obj.layer == LayerMask.NameToLayer ("Ground")) {
-                    string[] names = new string[selectedUnits.Count];
-                    int i = 0;
-                    foreach (GameObject g in selectedUnits) {
-                        names[i++] = g.name;
-                    }
-
-                    StateManager.state.BlobMove (names, state.network.networkID, hitInfo.point.x, hitInfo.point.y, hitInfo.point.z);
-                    StateManager.state.network.SendMessage (new MoveMany {
-                        ids = names,
-                            ownerID = state.network.networkID,
-                            x = hitInfo.point.x,
-                            y = hitInfo.point.y,
-                            z = hitInfo.point.z
-                    });
-                }
-            }
-        }
-    }
-
-    private void ToggleAttackOn () {
-        if (selectedUnits.Count > 0)
-            attacking = true;
-    }
-
-    private void Attack () {
-
         RaycastHit hitInfo = new RaycastHit ();
 
         if (Physics.Raycast (mainCamera.ScreenPointToRay (Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
@@ -234,9 +214,83 @@ public class Selection : MonoBehaviour {
             GameObject obj = hitInfo.transform.gameObject;
 
             if (obj.layer == LayerMask.NameToLayer ("Ground")) {
-                foreach (GameObject unit in selectedUnits) {
-                    unit.GetComponent<UnitController> ().CmdAttack (hitInfo.point);
+                string[] names = new string[selectedUnits.Count];
+                int i = 0;
+                foreach (GameObject g in selectedUnits) {
+                    names[i++] = g.name;
                 }
+
+                StateManager.state.BlobMove (names, state.network.networkID, hitInfo.point.x, hitInfo.point.y, hitInfo.point.z);
+                StateManager.state.network.SendMessage (new MoveMany {
+                    ids = names,
+                        ownerID = state.network.networkID,
+                        x = hitInfo.point.x,
+                        y = hitInfo.point.y,
+                        z = hitInfo.point.z
+                });
+            }
+        }
+    }
+
+    private void TeaseAttack() {
+        RaycastHit hitInfo = new RaycastHit ();
+        if (Physics.Raycast (mainCamera.ScreenPointToRay (Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
+            GameObject obj = hitInfo.transform.gameObject;
+
+            if (obj.layer == LayerMask.NameToLayer ("Ground")) {
+                Debug.Log("teasing an attack");
+                bool relative = (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+                string[] ids = new string[selectedUnits.Count];
+                int found =0;
+                foreach (GameObject unit in selectedUnits) {
+                    ids[found++] = unit.name;
+                    if(!relative) {
+                        unit.GetComponent<UnitController> ().ShowTeaserAttack (hitInfo.point.x, hitInfo.point.z, true);
+                    } 
+                }
+
+                if(relative) {
+                    UnitController[] units = state.GetUnits(ids, state.network.networkID);
+                    Vector2[] relativePositions = state.GetRelativePoints(units, hitInfo.point.x, hitInfo.point.z);
+                    for(int i = 0; i < units.Length; i++) {
+                        units[i].ShowTeaserAttack(relativePositions[i].x, relativePositions[i].y, true);
+                    }
+                }
+            }
+        }
+    }
+
+    private void Attack () {
+        RaycastHit hitInfo = new RaycastHit ();
+        if (Physics.Raycast (mainCamera.ScreenPointToRay (Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
+            GameObject obj = hitInfo.transform.gameObject;
+
+            if (obj.layer == LayerMask.NameToLayer ("Ground")) {
+                Stop();
+                bool relative = (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+
+                string[] ids = new string[selectedUnits.Count];
+                int found =0;
+                foreach (GameObject unit in selectedUnits) {
+                    ids[found++] = unit.name;
+                    if(!relative) {
+                        UnitController uc = unit.GetComponent<UnitController>();
+                        uc.ShowTeaserAttack(0,0,false);
+                        uc.Attack (hitInfo.point.x, hitInfo.point.z);
+                    }
+                }
+
+                if(relative) {
+                    StateManager.state.RelativeAttack(ids, state.network.networkID, hitInfo.point.x, hitInfo.point.z);
+                }
+
+                state.network.SendMessage (new AttackMany {
+                    ids = ids,
+                    ownerID = state.network.networkID,
+                    x = hitInfo.point.x,
+                    z = hitInfo.point.z,
+                    relative = relative
+                });
             }
         }
 
@@ -249,21 +303,16 @@ public class Selection : MonoBehaviour {
     }
 
     private void SelectDown () {
-        if (!attacking) {
-            leftClickHeld = true;
-            mousePositionInitial = Input.mousePosition;
+        leftClickHeld = true;
+        mousePositionInitial = Input.mousePosition;
+        for(int i = 0; i < filter.Length; ++i) {
+            filter[i] = false;
         }
-
     }
 
     private void SelectUp () {
-        if (attacking) {
-            attacking = false;
-            Stop ();
-            Attack ();
-        }
         // in place
-        else if (Vector3.Distance (Input.mousePosition, mousePositionInitial) == 0.0f) {
+        if (Vector3.Distance (Input.mousePosition, mousePositionInitial) == 0.0f) {
             RaycastHit hitInfo = new RaycastHit ();
             if ((Physics.Raycast (mainCamera.ScreenPointToRay (Input.mousePosition), out hitInfo))) {
                 GameObject obj = hitInfo.transform.gameObject;
@@ -286,16 +335,28 @@ public class Selection : MonoBehaviour {
             if (this.selectionMode == Mode.None) {
                 this.DeselectAll ();
             }
-            foreach (GameObject obj in withinSelectionBounds (FindObjectsOfType<Selectable> ())) {
+
+            //if any keys are being held down, we filter to only select those units
+            bool useFilter = false;
+            for(int i = 0; i < filter.Length; ++i) {
+                if(filter[i]) {
+                    useFilter = true;
+                }
+            }
+
+            foreach (GameObject obj in WithinSelectionBounds (FindObjectsOfType<Selectable> ())) {
+                UnitController unitType = obj.GetComponent<UnitController>();
                 //exclude buildings from box-select
-                if (obj.GetComponent<UnitController> () is BuildingController) {
+                if (unitType is BuildingController) {
                     continue;
                 }
 
-                if (this.selectionMode == Mode.Remove) {
-                    RemoveSelection (obj);
-                } else {
-                    AddSelection (obj);
+                if(!useFilter || (useFilter && filter[(int)unitType.type])) {
+                    if (this.selectionMode == Mode.Remove) {
+                        RemoveSelection (obj);
+                    } else {
+                        AddSelection (obj);
+                    }
                 }
             }
         }

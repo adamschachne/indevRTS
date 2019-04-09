@@ -17,6 +17,11 @@ public class Reticle : MonoBehaviour {
 		collObjects = new List<GameObject> ();
 	}
 
+	public void Disable() {
+		this.enabled = false;
+		coll.enabled = false;
+	}
+
 	public virtual void Update () {
 		if (currentDelay > 0) {
 			currentDelay -= Time.deltaTime;

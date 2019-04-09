@@ -17,12 +17,13 @@ public class StateManager : MonoBehaviour {
 
     [Serializable]
     public enum EntityType {
-        Soldier,
-        Ironfoe,
+        Soldier = 0,
+        Ironfoe = 1,
+        Dog = 2,
+        Mortar = 3,
         Barracks,
         FlagPlatform,
-        Flag,
-        Dog
+        Flag
     }
 
     [Header ("Network")]
@@ -185,7 +186,7 @@ public class StateManager : MonoBehaviour {
     }
 
     private void SpawnUnit (EntityType type) {
-        if (!unitIsBuilding) {
+        if (!unitIsBuilding && !Input.GetKey(InputActions.RTS.SELECT_DOWN.currentKey.key)) {
             unitIsBuilding = true;
             unitToBuild = type;
             remainingBuildTime = BuildTime (type);
@@ -211,7 +212,7 @@ public class StateManager : MonoBehaviour {
         return count + 1;
     }
 
-    public GameObject addUnit (short netID, EntityType unitType, string name = null) {
+    public GameObject AddUnit (short netID, EntityType unitType, string name = null) {
         // get my game units
         Transform myUnits = unitLists[netID];
         // create a fucking guy in the gameUnits
@@ -237,7 +238,6 @@ public class StateManager : MonoBehaviour {
                 break;
 
             case EntityType.Soldier:
-            default:
                 xyzPosition.y += guyPrefab.transform.position.y;
                 unit = Instantiate (guyPrefab, xyzPosition, guyPrefab.transform.rotation, myUnits);
                 break;
@@ -259,6 +259,11 @@ public class StateManager : MonoBehaviour {
             case EntityType.Dog:
                 xyzPosition.y += dogPrefab.transform.position.y;
                 unit = Instantiate (dogPrefab, xyzPosition, flagPlatformPrefab.transform.rotation, myUnits.transform);
+                break;
+            default:
+                Debug.Log("Entity Type: " + unitType + " did not match any known unitType");
+                Debug.Log(StackTraceUtility.ExtractStackTrace());
+                unit = null;
                 break;
         }
         unit.layer = 10 + netID;
@@ -284,31 +289,17 @@ public class StateManager : MonoBehaviour {
         }
     }
 
-    public void BlobMove (string[] ids, short ownerID, float x, float y, float z) {
-        //units list will be used to calc midpoint and stuff
+    public UnitController[] GetUnits(string[] ids, short ownerID) {
         UnitController[] units = new UnitController[ids.Length];
         string listName = unitLists[ownerID].gameObject.name;
         UnitController unit;
 
-        //magic box
-        float left = float.MaxValue, bot = float.MaxValue;
-        float right = float.MinValue, top = float.MinValue;
-
-        Vector3 center = Vector3.zero;
         int numFound = 0;
         for (int i = 0; i < ids.Length; ++i) {
             if (unitLookup.TryGetValue (listName + ids[i], out unit)) {
                 Vector3 pos = unit.transform.position;
                 ++numFound;
                 units[i] = unit;
-                center += pos;
-
-                //check box bounds
-                if (pos.x < left) left = pos.x;
-                if (pos.x > right) right = pos.x;
-                if (pos.z < bot) bot = pos.z;
-                if (pos.z > top) top = pos.z;
-
             }
         }
 
@@ -316,13 +307,47 @@ public class StateManager : MonoBehaviour {
         if (numFound < units.Length) {
             units = units.Where (c => c != null).ToArray ();
         }
+        return units;
+    }
 
-        center /= numFound;
+    public Vector2[] GetRelativePoints(UnitController[] units, float x, float z) {
+        Vector3 center = Vector3.zero;
+        for (int i = 0; i < units.Length; ++i) {
+            center += units[i].transform.position;
+        }
+
+        center /= units.Length;
+        //calculate offsets of each unit from center and move to those offsets
+        Vector2[] relativePoints = new Vector2[units.Length];
+        for (int i = 0; i < units.Length; ++i) {
+            relativePoints[i] = new Vector2(x + (units[i].transform.position.x - center.x), z + (units[i].transform.position.z - center.z));
+        }
+        return relativePoints;
+    }
+
+    public void BlobMove (string[] ids, short ownerID, float x, float y, float z) {
+        //units list will be used to calc midpoint and stuff
+        UnitController[] units = GetUnits(ids, ownerID);
+
+        //magic box
+        float left = float.MaxValue, bot = float.MaxValue;
+        float right = float.MinValue, top = float.MinValue;
+
+        for (int i = 0; i < ids.Length; ++i) {
+            Vector3 pos = units[i].transform.position;
+            //check box bounds
+            if (pos.x < left) left = pos.x;
+            if (pos.x > right) right = pos.x;
+            if (pos.z < bot) bot = pos.z;
+            if (pos.z > top) top = pos.z;
+        }
+
         //if moveTo point is outside magic box...
         if (x < left || x > right || z > top || z < bot) {
             //calculate offsets of each unit from center and move to those offsets
+            Vector2[] relativePoints = GetRelativePoints(units, x, z);
             for (int i = 0; i < units.Length; ++i) {
-                units[i].MoveTo (x + (units[i].transform.position.x - center.x), y, z + (units[i].transform.position.z - center.z));
+                units[i].MoveTo (relativePoints[i].x, y, relativePoints[i].y);
             }
         } else {
             foreach (UnitController u in units) {
@@ -340,6 +365,16 @@ public class StateManager : MonoBehaviour {
         } else {
             Debug.Log ("Unit with name: " + units.gameObject.name + name + " was not found!");
         }
+    }
+
+    public void RelativeAttack(string[] ids, short ownerID, float x, float z) {
+        UnitController[] units = GetUnits(ids, ownerID);
+        Vector2[] relativePoints = GetRelativePoints(units, x, z);
+        for (int i = 0; i < units.Length; ++i) {
+            units[i].ShowTeaserAttack(0, 0, false);
+            units[i].Attack (relativePoints[i].x, relativePoints[i].y);
+        }
+
     }
 
     public void DamageUnit (short ownerID, string name, int damage) {
@@ -410,7 +445,6 @@ public class StateManager : MonoBehaviour {
     }
 
     public void ScorePoint (short netID) {
-        Debug.Log (UnityEngine.StackTraceUtility.ExtractStackTrace ());
         points[netID]++;
         gui.reportScore (netID, points[netID]);
     }
@@ -423,8 +457,8 @@ public class StateManager : MonoBehaviour {
     }
 
     public void StartOfGameUnits () {
-        StateManager.state.addUnit (0, StateManager.EntityType.FlagPlatform, null);
-        StateManager.state.addUnit (1, StateManager.EntityType.FlagPlatform, null);
+        StateManager.state.AddUnit (0, StateManager.EntityType.FlagPlatform, null);
+        StateManager.state.AddUnit (1, StateManager.EntityType.FlagPlatform, null);
     }
 
     public void AssignStartMap (Voteable v) {

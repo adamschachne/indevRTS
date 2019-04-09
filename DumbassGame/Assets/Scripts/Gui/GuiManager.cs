@@ -27,9 +27,11 @@ public class GuiManager : MonoBehaviour {
     private GameObject RTSGUIParent;
     private GameObject mapSelectParent;
     [SerializeField]
-    private Sprite[] UnitIcons;
+    private Sprite[] unitIcons;
     private Image unitIcon;
     private Image unitLoadingBar;
+    private Transform selectionFilter;
+    private Image[] filterIcons;
     private float unitIconPosition;
 
     // Use this for initialization
@@ -47,6 +49,8 @@ public class GuiManager : MonoBehaviour {
         unitIcon = RTSGUIParent.transform.Find ("UnitIcon").GetComponent<Image> ();
         unitLoadingBar = unitIcon.transform.Find ("RadialLoad").GetComponent<Image> ();
         unitIconPosition = unitIcon.transform.localPosition.x;
+        selectionFilter = RTSGUIParent.transform.Find("SelectionFilter");
+        filterIcons = selectionFilter.GetComponentsInChildren<Image>();
         KeybindMenu ();
 
         for (int i = 1; i <= 4; ++i) {
@@ -90,10 +94,10 @@ public class GuiManager : MonoBehaviour {
             return;
         }
 
-        int xPos = (int) (((Screen.width / 2) * -0.9) + canvas.transform.position.x);
-        int yPos = (int) (Screen.height * 0.85);
-
         RectTransform buttonSize = KeyButtonPrefab.GetComponent<RectTransform> ();
+
+        int xPos = (int) ((Screen.width/2) * -0.9) - (int) (buttonSize.rect.width * canvas.scaleFactor) + (int) canvas.transform.position.x;
+        int yPos = (int) (Screen.height * 0.85);
 
         foreach (StateManager.View v in gameModes) {
             if (groups[(int) v].Count > 0)
@@ -101,11 +105,12 @@ public class GuiManager : MonoBehaviour {
             yPos = (int) (Screen.height * 0.85);
             foreach (List<ActionType> group in groups[(int) v]) {
                 GameObject keyButton = Instantiate (KeyButtonPrefab);
-                Transform keyButtonTransform = keyButton.GetComponent<Transform> ();
                 KeybindButton buttonScript = keyButton.GetComponent<KeybindButton> ();
                 keyButton.transform.SetParent (keybindMenu.transform, false);
                 buttonScript.Init (group);
-                keyButtonTransform.position = new Vector3 (xPos, yPos, 0);
+                keyButton.transform.position = new Vector3 (xPos, yPos, 0);
+                float realXPos = keyButton.transform.localPosition.x;
+                float realYPos = keyButton.transform.localPosition.y;
                 yPos -= (int) (buttonSize.rect.height * canvas.scaleFactor * 1.5);
 
                 if (yPos < buttonSize.rect.height * canvas.scaleFactor * 1.5) {
@@ -114,6 +119,104 @@ public class GuiManager : MonoBehaviour {
                 }
             }
         }
+    }
+
+    public void SelectionFilter(bool[] unitFilter) {
+        int foundFilters = 0;
+        for(int i = 0; i < filterIcons.Length; ++i) {
+            if(unitFilter[i]) {
+                Image filterImage = filterIcons[foundFilters];
+                filterImage.sprite = UnitIcon((StateManager.EntityType)i);
+                filterImage.gameObject.SetActive(true);
+                foundFilters++;
+            }
+        }
+
+        if(foundFilters > 0) {
+            selectionFilter.gameObject.SetActive(true);
+        }
+        else {
+            selectionFilter.gameObject.SetActive(false);
+        }
+
+        for(int i = foundFilters; i < filterIcons.Length; ++i) {
+            filterIcons[i].gameObject.SetActive(false);
+        }
+
+        float spot = 50 - foundFilters*50;
+
+        for(int i = 0; i < foundFilters; ++i) {
+            filterIcons[i].transform.localPosition = new Vector3(spot, 0, 0);
+            spot += 100;
+        }
+    }
+
+    /*
+    public void SelectionFilter(bool[] unitFilter, Vector2 position, Vector2 size) {
+        int foundFilters = 0;
+        float left = 0;
+        float right = 0;
+        float top = 0;
+        float bot = 0;
+        Debug.Log("incoming pos:" + position);
+
+        //Vector2 screenSquish = new Vector2(1920.0f/canvas.pixelRect.max.x, 1080f/canvas.pixelRect.max.y);
+        //Debug.Log("position after screensquish" + position*screenSquish);
+
+        for(int i = 0; i < filterIcons.Length; ++i) {
+            if(unitFilter[i]) {
+                Image filterImage = filterIcons[foundFilters];
+                filterImage.sprite = UnitIcon((StateManager.EntityType)i);
+                filterImage.gameObject.SetActive(true);
+
+                if(filterImage.rectTransform.rect.xMin + filterImage.rectTransform.localPosition.x < left)
+                    left = filterImage.rectTransform.rect.xMin + filterImage.rectTransform.localPosition.x;
+                if(filterImage.rectTransform.rect.xMax + filterImage.rectTransform.localPosition.x > right) 
+                    right = filterImage.rectTransform.rect.xMax + filterImage.rectTransform.localPosition.x;
+                if(filterImage.rectTransform.rect.yMin + filterImage.rectTransform.localPosition.y < bot)
+                    bot = filterImage.rectTransform.rect.yMin + filterImage.rectTransform.localPosition.y;
+                if(filterImage.rectTransform.rect.yMax > top) 
+                    top = filterImage.rectTransform.rect.yMax + filterImage.rectTransform.localPosition.y;
+
+                foundFilters++;
+            }
+        }
+
+        for(int i = foundFilters; i < filterIcons.Length; ++i) {
+            filterIcons[i].gameObject.SetActive(false);
+        }
+
+        if(right-left < size.x && top-bot < size.y) {
+            selectionFilter.localScale = new Vector3(1,1,1);
+            selectionFilter.gameObject.SetActive(true);
+
+        } else {
+            if(right-left != 0 && top-bot != 0) {
+                Vector3 scaleFactor = new Vector3(1,1,1);
+                if(size.x < right-left) {
+                    scaleFactor.x = size.x/(right-left);
+                } 
+                if(size.y < top-bot) {
+                    scaleFactor.y = size.y/(top-bot);
+                }
+                selectionFilter.localScale = scaleFactor;
+            }
+        }
+
+        if(foundFilters == 1) {
+            selectionFilter.localPosition = (position + new Vector2(selectionFilter.localScale.x*(right-left)/2, selectionFilter.localScale.y*(bot-top)/2));
+        }
+        else if(foundFilters == 2) {
+            selectionFilter.localPosition = (position + new Vector2(0, selectionFilter.localScale.y*(bot-top)/2));
+        }
+        else {
+            selectionFilter.localPosition = position;
+        }
+    }
+    */
+
+    public void DisableSelectionFilter() {
+        selectionFilter.gameObject.SetActive(false);
     }
 
     public void Cleanup () {
@@ -180,18 +283,7 @@ public class GuiManager : MonoBehaviour {
         unitLoadingBar.fillAmount = 0;
     }
 
-    private Sprite UnitIcon (StateManager.EntityType type) {
-        switch (type) {
-            case StateManager.EntityType.Soldier:
-                return UnitIcons[0];
-            case StateManager.EntityType.Ironfoe:
-                return UnitIcons[1];
-            case StateManager.EntityType.Dog:
-                return UnitIcons[2];
-            default:
-                Debug.Log ("Couldn't return a sprite for unit type: " + type);
-                return null;
-        }
-
+    public Sprite UnitIcon (StateManager.EntityType type) {
+        return unitIcons[(int)type];
     }
 }
