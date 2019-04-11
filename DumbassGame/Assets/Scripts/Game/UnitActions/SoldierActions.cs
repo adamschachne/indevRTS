@@ -11,6 +11,8 @@ public class SoldierActions : ActionController {
 	private BoxReticle teaserReticle;
 	
 	private GameObject lastAttack;
+	[SerializeField]
+	private Renderer colorRenderer;
 	void Start() {
 		teaserReticle = Instantiate(hitReticle, this.transform.parent).GetComponent<BoxReticle>();
 		teaserReticle.projWidth = attackWidth;
@@ -20,6 +22,13 @@ public class SoldierActions : ActionController {
 		teaserReticle.updateValues();
 		teaserReticle.Disable();
 		teaserReticle.gameObject.SetActive(false);
+
+		MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+		colorRenderer.GetPropertyBlock(mpb);
+		string netID = this.transform.parent.name;
+		int ID = int.Parse (netID.Remove (0, 3));
+		mpb.SetInt("_NetworkID", ID);
+		colorRenderer.SetPropertyBlock(mpb);
 	}
 	override public void Attack (Vector3 targetDirection) {
 		GameObject hit = Instantiate (hitReticle);

@@ -14,9 +14,7 @@ public abstract class ActionController : MonoBehaviour {
 	public virtual void ShowTeaserReticle(Vector3 targetDirection, bool enabled) {
 
 	}
-
 	
-
 	public virtual bool CancelAttack()
 	{
 		return false;
