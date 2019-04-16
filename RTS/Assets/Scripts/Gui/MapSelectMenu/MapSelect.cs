@@ -14,10 +14,12 @@ public class MapSelect {
     private Transform mapButtonParent;
     private Voteable[] voteables;
     private Image mapPreview;
+    private static Button startGame;
 
     [Serializable]
     public class MapSelectState {
         public MapSelectState (int voteableLength) {
+            this.currentMapID = -1;
             this.connectedPlayers = new bool[4];
             this.ownerControl = false;
             voteables = new Voteable.VoteInfo[voteableLength];
@@ -26,6 +28,7 @@ public class MapSelect {
         public void MirrorState (MapSelectState other) {
             ownerControl = other.ownerControl;
             currentMapID = other.currentMapID;
+            MapSelect.startGame.interactable = (currentMapID > -1);
             for (int i = 0; i < 4; ++i) {
                 connectedPlayers[i] = other.connectedPlayers[i];
             }
@@ -56,6 +59,7 @@ public class MapSelect {
         roomID = mapSelectMenu.transform.Find ("RoomID").GetComponent<Text> ();
         mapButtonParent = mapSelectMenu.transform.Find ("MapButtons");
         mapPreview = mapSelectMenu.transform.Find ("MapPreview").GetComponent<Image> ();
+        startGame = mapSelectMenu.transform.Find("Start Game").GetComponent<Button> ();
 
         GameObject mapButtonPrefab = Resources.Load ("Prefabs/MapButton", typeof (GameObject)) as GameObject;
         GameObject[] maps = Resources.LoadAll<GameObject> ("Maps");
@@ -85,11 +89,14 @@ public class MapSelect {
 
         ownerControl.isOn = false;
         ownerControl.interactable = state.isServer;
+        startGame.interactable = false;
 
         if (state.isServer) {
             roomID.text = "Room ID: " + address;
-            mapState.connectedPlayers[0] = true;
             SetPlayerConnected(0, true);
+            for(short i = 1; i < 4; i++) {
+                SetPlayerConnected(i, false);
+            }
 
             ownerControl.onValueChanged.AddListener (delegate (bool toggleIsOn) {
                 this.mapState.ownerControl = toggleIsOn;
@@ -112,11 +119,11 @@ public class MapSelect {
         }
     }
 
-    private void SetPlayerConnected(short id, bool isConnected) {
+    private void SetPlayerConnected (short id, bool isConnected) {
         if(isConnected) {
             players[id].color = GuiManager.GetColorByNetID(id);
         } else {
-            players[id].color = new Color(115, 115, 115, 115);
+            players[id].color = new Color(.45f, .45f, .45f, .45f);
         }
         mapState.connectedPlayers[id] = isConnected;
     }
@@ -125,6 +132,19 @@ public class MapSelect {
         if (state.isServer) {
             SetPlayerConnected(playerid, true);
             SendSync ();
+        }
+    }
+
+    public void RecieveDisconnected(short playerid) {
+        if(state.isServer) {
+            SetPlayerConnected(playerid, false);
+            for (int i = 0; i < mapState.voteables.Length; ++i) {
+                mapState.voteables[i].ClearVotes(playerid);
+            }
+            SendSync();
+        }
+        else if(playerid == 1) {
+            gui.Cleanup();
         }
     }
 
@@ -156,6 +176,7 @@ public class MapSelect {
             mapState.currentMapID = votableID;
             SendSync ();
         }
+        startGame.interactable = true;
     }
 
     public MapData GetMapData () {

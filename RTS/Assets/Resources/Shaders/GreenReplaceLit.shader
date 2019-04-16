@@ -7,6 +7,8 @@
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
         [PerRendererData] _NetworkID ("Network ID", int) = 0
+        _GreenThresh("Green Threshold", Range(0,1)) = 0.7
+        _RbThresh("Red/Blue Threshold", Range(0,1)) = 0.8
     }
     SubShader
     {
@@ -31,6 +33,9 @@
         half _Metallic;
         fixed4 _Color;
         int _NetworkID;
+        fixed _GreenThresh;
+        fixed _RbThresh;
+        
 
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
         // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
@@ -52,7 +57,7 @@
                     col.g = 0;
                     col.b = 0;
                 }
-                else if(col.g > .70 && col.r < .78 && col.b < .78)
+                else if(col.g > _GreenThresh && col.r < _RbThresh && col.b < _RbThresh)
                 {
                     fixed gColor = col.g;
                     fixed rbColor = col.r;
@@ -68,7 +73,7 @@
                     col.r = 0;
                     col.g = 0;
                 }
-                else if(col.g > .70 && col.r < .78 && col.b < .78)
+                else if(col.g > _GreenThresh && col.r < _RbThresh && col.b < _RbThresh)
                 {
                     fixed gColor = col.g;
                     fixed rbColor = col.r;
@@ -84,7 +89,7 @@
                     col.r = col.g;
                     col.b = 0;
                 }
-                else if(col.g > .70 && col.r < .78 && col.b < .78)
+                else if(col.g > _GreenThresh && col.r < _RbThresh && col.b < _RbThresh)
                 {
                     fixed gColor = col.g;
                     fixed rbColor = col.r;

@@ -22,6 +22,10 @@ public class Voteable : MonoBehaviour {
             }
             this.decision = other.decision;
         }
+
+        public void ClearVotes(short playerid) {
+            this.votes[playerid] = false;
+        }
     }
 
     [System.Serializable]

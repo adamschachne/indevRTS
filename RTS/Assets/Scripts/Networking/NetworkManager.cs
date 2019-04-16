@@ -83,7 +83,12 @@ public class NetworkManager : MonoBehaviour {
         state.isServer = false;
         mConnections = new List<ConnectionId> ();
         Cleanup ();
-        state.LeaveGame ();
+        if(state.inGame) {
+            state.LeaveGame ();
+        }
+        else {
+            state.gui.Cleanup();
+        }
     }
 
     private void Cleanup () {
@@ -298,8 +303,11 @@ public class NetworkManager : MonoBehaviour {
                         mConnections.Remove (evt.ConnectionId);
                         // A connection was disconnected
                         Debug.Log ("Local Connection ID " + evt.ConnectionId + " disconnected");
-                        if (state.isServer == false) {
+                        if (state.inGame) {
                             Reset ();
+                        }
+                        else {
+                            state.gui.mapSelect.RecieveDisconnected(evt.ConnectionId.id);
                         }
                         break;
                     case NetEventType.ReliableMessageReceived:
