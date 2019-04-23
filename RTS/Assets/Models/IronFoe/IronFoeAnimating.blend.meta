@@ -56,7 +56,17 @@ ModelImporter:
     7400014: IronFoeWalk
     9500000: //RootNode
     13700000: IronFoe_001
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: IronFoe
+    second: {fileID: 2100000, guid: 1a8722c0feb2da64cbd32be6e40d97e1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: IronFoe_002
+    second: {fileID: 2100000, guid: 1a8722c0feb2da64cbd32be6e40d97e1, type: 2}
   materials:
     importMaterials: 1
     materialName: 0
