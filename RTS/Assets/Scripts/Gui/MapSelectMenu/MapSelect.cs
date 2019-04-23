@@ -110,7 +110,7 @@ public class MapSelect {
     }
 
     //networking functions to send and recieve messages
-
+/*
     public void SendConnected () {
         if (!state.isServer) {
             network.SendMessage (new Connected {
@@ -118,6 +118,7 @@ public class MapSelect {
             });
         }
     }
+*/
 
     private void SetPlayerConnected (short id, bool isConnected) {
         if(isConnected) {
@@ -136,15 +137,20 @@ public class MapSelect {
     }
 
     public void RecieveDisconnected(short playerid) {
-        if(state.isServer) {
-            SetPlayerConnected(playerid, false);
-            for (int i = 0; i < mapState.voteables.Length; ++i) {
-                mapState.voteables[i].ClearVotes(playerid);
+        if(playerid < 4) {
+            if(state.isServer) {
+                SetPlayerConnected(playerid, false);
+                for (int i = 0; i < mapState.voteables.Length; ++i) {
+                    mapState.voteables[i].ClearVotes(playerid);
+                }
+                SendSync();
             }
-            SendSync();
+            else {
+                gui.Cleanup();
+            }
         }
-        else if(playerid == 1) {
-            gui.Cleanup();
+        else {
+            Debug.Log("A user was disconnected due to your full room.");
         }
     }
 
@@ -156,18 +162,16 @@ public class MapSelect {
         if (state.isServer) {
             network.SendMessage (new SyncMapSelect {
                 state = this.mapState
-            });
+            }, -1, false);
         }
     }
 
     public void RecieveSync (MapSelectState mapState) {
-        if (!state.isServer) {
-            this.mapState.MirrorState (mapState);
-            for (short i = 0; i < 4; ++i) {
-                SetPlayerConnected(i, mapState.connectedPlayers[i]);
-            }
-            ownerControl.isOn = mapState.ownerControl;
+        this.mapState.MirrorState (mapState);
+        for (short i = 0; i < 4; ++i) {
+            SetPlayerConnected(i, mapState.connectedPlayers[i]);
         }
+        ownerControl.isOn = mapState.ownerControl;
         gui.MapSelectMenu ();
     }
 

@@ -92,7 +92,7 @@ public class BoxReticle : Reticle {
 							id = closest.name,
 								ownerID = ID,
 								damage = this.damage
-						}, false);
+						}, -1, false);
 						StateManager.state.DamageUnit (ID, closest.name, this.damage);
 					}
 				}

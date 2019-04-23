@@ -9,7 +9,8 @@ public class NetworkManager : MonoBehaviour {
 
     private IBasicNetwork mNetwork = null;
     private List<ConnectionId> mConnections = new List<ConnectionId> ();
-
+    private short[] playerSlots = new short[3];
+    private string lobbyAddress = "";
     // Connection Info
     public string uSignalingUrl = "ws://riftwalk.io:12776/chatapp";
     public string uIceServer = "stun:riftwalk.io:12779";
@@ -18,7 +19,7 @@ public class NetworkManager : MonoBehaviour {
     public string uIceServer2 = "stun:stun.l.google.com:19302";
     [ReadOnly]
     public short networkID = 0;
-
+    private ConnectionId serverID = ConnectionId.INVALID;
     private StateManager state;
     private List<Message> batch;
     JsonSerializerSettings jssettings;
@@ -39,13 +40,6 @@ public class NetworkManager : MonoBehaviour {
             Debug.Log ("Failed to access webrtc ");
         }
         batch = new List<Message> ();
-    }
-
-    public void OnInputEndEdit () {
-        if (Input.GetKey (KeyCode.Return)) {
-            // join room
-            OnJoinRoomClicked ();
-        }
     }
 
     public void OnJoinRoomClicked () {
@@ -81,7 +75,11 @@ public class NetworkManager : MonoBehaviour {
     public void Reset () {
         Debug.Log ("Cleanup!");
         state.isServer = false;
+        serverID = ConnectionId.INVALID;
+        networkID = 0;
         mConnections = new List<ConnectionId> ();
+        playerSlots = new short[3];
+        lobbyAddress = "";
         Cleanup ();
         if(state.inGame) {
             state.LeaveGame ();
@@ -104,15 +102,40 @@ public class NetworkManager : MonoBehaviour {
         }
     }
 
-    private void SendString (string msg, bool reliable = true) {
+    private void SendString (string msg, short connectionID = -1, bool reliable = true) {
         if (mNetwork == null || mConnections.Count == 0) {
             Debug.Log ("No connection. Can't send message.");
         } else {
             byte[] msgData = Encoding.UTF8.GetBytes (msg);
-            foreach (ConnectionId id in mConnections) {
-                mNetwork.SendData (id, msgData, 0, msgData.Length, reliable);
+            if(connectionID == -1) {
+                Debug.Log("Sending message to all.");
+                foreach (ConnectionId id in mConnections) {
+                    mNetwork.SendData (id, msgData, 0, msgData.Length, reliable);
+                }
+            }
+            else {
+                foreach(ConnectionId id in mConnections) {
+                    if(id.id == connectionID) {
+                        Debug.Log("Sending message just to " + connectionID);
+                        mNetwork.SendData(id, msgData, 0, msgData.Length, reliable);
+                        return;
+                    }
+                }
+                Debug.Log("Could not send message to connectionID: " + connectionID);
             }
         }
+    }
+
+    public void SetupClient(short playerID, string address) {
+        this.networkID = playerID;
+        Debug.Log ("Server started. Address: " + address);
+        state.gui.MapSelectMenu ();
+        state.gui.mapSelect.init (address);
+        state.gui.SetUnitIconPosition (playerID);
+        SendMessage(new ConfirmClient {
+            playerID = playerID
+        }, serverID.id, false);
+        Debug.Log("I am client " + playerID + " and my server is connection " + this.serverID);
     }
 
     public void SendSync () {
@@ -151,20 +174,37 @@ public class NetworkManager : MonoBehaviour {
         }
 
         syncData.units = netUnits.ToArray ();
-
         // send the new unit to connections
         SendMessage (syncData);
     }
 
-    public void SendMessage (Message message, bool toBatch = true) {
-        if (message != null) {
-            if (toBatch) {
-                batch.Add (message);
+    public void SendMessage (Message message, short connectionID = -1, bool toBatch = true) {
+        if(serverID == ConnectionId.INVALID) {
+            if (message != null) {
+                if(connectionID == -1) {
+                    if (toBatch) {
+                        batch.Add (message);
+                    } else {
+                        SendString (JsonConvert.SerializeObject (message, jssettings), -1, true);
+                    }
+                }
+                else {
+                    SendString(JsonConvert.SerializeObject(message, jssettings), connectionID, true);
+                }
             } else {
-                SendString (JsonConvert.SerializeObject (message, jssettings), true);
+                Debug.Log ("You tried to send a null message!");
             }
+        }
+        else {
+            SendString(JsonConvert.SerializeObject(message, jssettings), serverID.id, true);
+        }
+    }
+
+    public void SendMessageToServer(Message message, bool toBatch = true) {
+        if(serverID != ConnectionId.INVALID) {
+            SendMessage(message, serverID.id, toBatch);
         } else {
-            Debug.Log ("You tried to send a null message!");
+            Debug.Log("You are not properly connected to the server!");
         }
     }
 
@@ -174,17 +214,13 @@ public class NetworkManager : MonoBehaviour {
                 cmds = batch.ToArray ()
             };
 
-            SendMessage (cmdBatch, false);
+            SendMessage (cmdBatch, -1, false);
             batch.Clear ();
         }
     }
 
     public void HandleRequestUnit (RequestUnit ru) {
         Debug.Log ("HANDLING REQUEST UNIT");
-        // Server Only
-        if (state.isServer == false) {
-            return;
-        }
 
         // Do logic to check if they can add a unit
         // if they cant, do nothing
@@ -216,6 +252,14 @@ public class NetworkManager : MonoBehaviour {
             }
             message.process ();
 
+            if(state.isServer && message.mt != MessageType.ServerOnly) {
+                foreach(ConnectionId id in mConnections) {
+                    if(id != evt.ConnectionId) {
+                        SendMessage(message, id.id, false);
+                    }
+                }
+            }
+
         } catch (System.NullReferenceException e) {
             Debug.Log ("Exception thrown: " + e.ToString ());
             if (msg != null)
@@ -245,7 +289,9 @@ public class NetworkManager : MonoBehaviour {
         //check if the network was created
         if (mNetwork != null) {
             //sync all units before processing events
-            SendBatch ();
+            if(batch.Count > 0) {
+                SendBatch ();
+            }
 
             mNetwork.Update ();
             NetworkEvent evt;
@@ -260,7 +306,8 @@ public class NetworkManager : MonoBehaviour {
                         string address = evt.Info;
                         state.gui.roomID.text = "Room ID: " + address;
                         Debug.Log ("Server started. Address: " + address);
-                        state.gui.SetUnitIconPosition (state.isServer);
+                        lobbyAddress = address;
+                        state.gui.SetUnitIconPosition (networkID);
                         state.gui.MapSelectMenu ();
                         state.gui.mapSelect.init (address);
 
@@ -279,20 +326,47 @@ public class NetworkManager : MonoBehaviour {
                     case NetEventType.NewConnection:
                         ConnectionId connection = evt.ConnectionId;
                         Debug.Log ("new conection: " + connection.id.ToString ());
-                        // regardless of server or client, save this connection so it can be used
-                        mConnections.Add (connection);
-
-                        // CLIENT ONLY
-                        if (!state.isServer) {
-                            // currently, the client is always 1 TODO
-                            networkID = 1;
-                            state.gui.SetUnitIconPosition (state.isServer);
-                            SendMessage (new Connected {
-                                playerID = networkID
-                            });
-                            string serverAddress = evt.Info;
-                            state.gui.mapSelect.init (serverAddress);
+                        
+                        if(!state.isServer && serverID == ConnectionId.INVALID) {
+                            //clients unconditionally connect to their server and wait for a response.
+                            mConnections.Add (connection);
+                            serverID = connection;
                         }
+                        else if(state.inGame) {
+                            mConnections.Add(connection);
+                            SendMessage(new RefuseConnection {
+                                reason = "The game you tried to join has already begun."
+                            }, evt.ConnectionId.id, false);
+                            mConnections.Remove(connection);
+                        }
+                        else if(state.isServer) {
+                            bool openSlot = false;
+                            //check if there is an open slot in the playerSlots list
+                            for(short i = 0; i < playerSlots.Length; i++) {
+                                //if there is, occupy that slot with the connectionID of the client who connected
+                                //and add the connection to our connections list.
+                                if(playerSlots[i] == 0) {
+                                    mConnections.Add (connection);
+                                    openSlot = true;
+                                    playerSlots[i] = evt.ConnectionId.id;
+                                    SendMessage(new AssignClient {
+                                        playerID = (short)(i + 1),
+                                        address = lobbyAddress
+                                    }, evt.ConnectionId.id, false);
+                                    break;
+                                }
+                            }
+
+                            //if there was not an open slot, refuse the connection
+                            if(!openSlot) {
+                                mConnections.Add(connection);
+                                SendMessage(new RefuseConnection {
+                                reason = "The lobby you tried to join was full."
+                            }, evt.ConnectionId.id, false);
+                                mConnections.Remove(connection);
+                            }
+                        }
+
                         break;
                     case NetEventType.ConnectionFailed:
                         //Outgoing connection failed. Inform the user.
@@ -300,15 +374,35 @@ public class NetworkManager : MonoBehaviour {
                         Reset ();
                         break;
                     case NetEventType.Disconnected:
-                        mConnections.Remove (evt.ConnectionId);
                         // A connection was disconnected
                         Debug.Log ("Local Connection ID " + evt.ConnectionId + " disconnected");
-                        if (state.inGame) {
-                            Reset ();
+                        if(state.isServer) {
+                            if (state.inGame) {
+                                for(short i = 0; i < playerSlots.Length; i++) {
+                                    if(playerSlots[i] == evt.ConnectionId.id) {
+                                        Reset ();
+                                        break;
+                                    }
+                                }
+                            }
+                            else {
+                                for(short i = 0; i < playerSlots.Length; i++) {
+                                    if(playerSlots[i] == evt.ConnectionId.id) {
+                                        mConnections.Remove(evt.ConnectionId);
+                                        state.gui.mapSelect.RecieveDisconnected((short)(i + 1));
+                                        playerSlots[i] = 0;
+                                        break;
+                                    }
+                                }
+                            }
                         }
                         else {
-                            state.gui.mapSelect.RecieveDisconnected(evt.ConnectionId.id);
+                            if(evt.ConnectionId.id == serverID.id) {
+                                Reset();
+                                state.gui.Cleanup();
+                            }
                         }
+                        
                         break;
                     case NetEventType.ReliableMessageReceived:
                     case NetEventType.UnreliableMessageReceived:
@@ -321,5 +415,9 @@ public class NetworkManager : MonoBehaviour {
             if (mNetwork != null)
                 mNetwork.Flush ();
         }
+    }
+
+    public int GetConnectionsCount() {
+        return mConnections.Count;
     }
 }

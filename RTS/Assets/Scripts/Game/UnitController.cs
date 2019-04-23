@@ -20,6 +20,8 @@ public class UnitController : MonoBehaviour {
     protected ActionController actions;
     private NavMeshAgent agent;
     public StateManager.EntityType type;
+    short ownerNetID;
+    short unitID;
 
     // Use this for initialization
     void Start () {
@@ -36,6 +38,10 @@ public class UnitController : MonoBehaviour {
         agent.destination = this.transform.position;
         rotateSpeed = rotateSpeed / 60;
         targetDirection = new Vector3 (0, 0, 0);
+
+        string netID = this.transform.parent.name;
+		ownerNetID = short.Parse (netID.Remove (0, 3));
+        unitID = short.Parse(this.name);
     }
 
     // Called by user
@@ -67,7 +73,7 @@ public class UnitController : MonoBehaviour {
         actions.CancelAttack ();
         state.RemoveUnit (this.gameObject);
         this.transform.parent = null;
-        state.selection.CleanupSelection (this.gameObject);
+        state.selection.CleanupSelection (this);
         FlagActions flag = null;
         if (GetComponent<SoldierActions> () != null &&
             (flag = GetComponentInChildren<FlagActions> ()) != null) {
@@ -107,14 +113,7 @@ public class UnitController : MonoBehaviour {
     }
 
     public virtual void CmdSyncPos () {
-        if (agent.obstacleAvoidanceType == ObstacleAvoidanceType.HighQualityObstacleAvoidance) {
-            state.network.SendMessage (new SyncPos {
-                id = this.name,
-                    ownerID = short.Parse (this.transform.parent.name.Remove (0, 3)),
-                    x = this.transform.position.x,
-                    z = this.transform.position.z
-            });
-        }
+        state.SubmitForSync(this.name, this.ownerNetID, new Vector2(this.transform.position.x, this.transform.position.z));
     }
 
     public virtual void SyncPos (float x, float z) {
@@ -154,7 +153,8 @@ public class UnitController : MonoBehaviour {
 
         anim.SetMove (moving);
 
-        if (state.isServer) {
+        // && unitID + state.frameCount % state.syncRate == 0 (created weird desync issues)
+        if (moving && state.isServer) {
             CmdSyncPos ();
         }
 

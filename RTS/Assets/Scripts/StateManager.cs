@@ -67,6 +67,10 @@ public class StateManager : MonoBehaviour {
     private Dictionary<string, UnitController> unitLookup;
     private Transform[] unitLists;
     private Transform[] objectLists;
+    private List<string> syncIDs;
+    private List<Vector2> syncPos;
+    public long frameCount;
+    public short syncRate;
     private static StateManager s;
     [HideInInspector]
     public static StateManager state {
@@ -137,7 +141,8 @@ public class StateManager : MonoBehaviour {
         input.Subscribe (CancelBuild, InputActions.RTS.CANCEL_BUILD);
     }
 
-    void Update () {
+    void FixedUpdate () {
+        ++frameCount;
         if (unitIsBuilding) {
             remainingBuildTime -= Time.deltaTime;
             gui.UpdateUnitLoad (remainingBuildTime / BuildTime (unitToBuild));
@@ -145,6 +150,16 @@ public class StateManager : MonoBehaviour {
                 network.requestNewUnit (unitToBuild);
                 CancelBuild ();
             }
+        }
+
+        if(isServer && inGame && syncIDs.Count > 0) {
+            network.SendMessage(new SyncAll{
+                ids = syncIDs.ToArray(),
+                pos = syncPos.ToArray()
+            });
+
+            syncIDs.Clear();
+            syncPos.Clear();
         }
     }
 
@@ -166,12 +181,17 @@ public class StateManager : MonoBehaviour {
         currentMap = Instantiate (gui.mapSelect.GetMapData ().gameObject, this.transform).GetComponent<MapData> ();
         unitLists = new Transform[currentMap.mapInfo.numberSupportedPlayers];
         objectLists = new Transform[currentMap.mapInfo.numberSupportedPlayers];
+        syncIDs = new List<string>();
+        syncPos = new List<Vector2>();
         for (int i = 0; i < currentMap.mapInfo.numberSupportedPlayers; i++) {
             unitLists[i] = Instantiate (gameUnitsPrefab, gameUnits.transform).GetComponent<Transform> ();
             unitLists[i].gameObject.name = "GU-" + i;
             objectLists[i] = Instantiate (gameUnitsPrefab, gameUnits.transform).GetComponent<Transform> ();
             objectLists[i].gameObject.name = "IO-" + i;
         }
+
+        Camera.main.transform.position = currentMap.mapInfo.cameraPosition;
+        Camera.main.transform.eulerAngles = currentMap.mapInfo.cameraAngle;
 
     }
 
@@ -388,13 +408,21 @@ public class StateManager : MonoBehaviour {
 
     }
 
-    public void SyncPos (short ownerID, string name, float x, float z) {
-        Transform units = unitLists[ownerID];
-        UnitController unit;
-        if (unitLookup.TryGetValue (units.gameObject.name + name, out unit)) {
-            unit.SyncPos (x, z);
-        } else {
-            Debug.Log ("Unit with name: " + units.gameObject.name + name + " was not found!");
+    public void SubmitForSync(string name, short ownerID, Vector2 pos) {
+        syncIDs.Add(ownerID + "," + name);
+        syncPos.Add(pos);
+    }
+
+    public void SyncPos (string[] ids, Vector2[] pos) {
+        for(int i = 0; i < ids.Length; ++i) {
+            UnitController unit;
+            string[] ownerAndName = ids[i].Split(',');
+            short ownerID = short.Parse(ownerAndName[0]);
+            if (unitLookup.TryGetValue (unitLists[ownerID].gameObject.name + ownerAndName[1], out unit)) {
+                unit.SyncPos (pos[i].x, pos[i].y);
+            } else {
+                Debug.Log ("Unit with name: " + unitLists[ownerID].gameObject.name + name + " was not found!");
+            }
         }
     }
 
@@ -457,8 +485,10 @@ public class StateManager : MonoBehaviour {
     }
 
     public void StartOfGameUnits () {
-        StateManager.state.AddUnit (0, StateManager.EntityType.FlagPlatform, null);
-        StateManager.state.AddUnit (1, StateManager.EntityType.FlagPlatform, null);
+        Debug.Log("Creating start of game units for " + network.GetConnectionsCount() + " connections.");
+        for(short i = 0; i <= network.GetConnectionsCount(); ++i) {
+            StateManager.state.AddUnit (i, StateManager.EntityType.FlagPlatform, null);
+        }
     }
 
     public void AssignStartMap (Voteable v) {

@@ -19,6 +19,8 @@ public class MapData : MonoBehaviour {
         public bool canBuildDog;
         public bool canBuildMortars;
         public GameMode mapGameMode;
+        public Vector3 cameraPosition;
+        public Vector3 cameraAngle;
     }
 
     public MapInfo mapInfo;

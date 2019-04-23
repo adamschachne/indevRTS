@@ -32,7 +32,6 @@ public class GuiManager : MonoBehaviour {
     private Image unitLoadingBar;
     private Transform selectionFilter;
     private Image[] filterIcons;
-    private float unitIconPosition;
 
     // Use this for initialization
     void Start () {
@@ -48,7 +47,6 @@ public class GuiManager : MonoBehaviour {
         mapSelect = new MapSelect (mapSelectParent);
         unitIcon = RTSGUIParent.transform.Find ("UnitIcon").GetComponent<Image> ();
         unitLoadingBar = unitIcon.transform.Find ("RadialLoad").GetComponent<Image> ();
-        unitIconPosition = unitIcon.transform.localPosition.x;
         selectionFilter = RTSGUIParent.transform.Find("SelectionFilter");
         filterIcons = selectionFilter.GetComponentsInChildren<Image>();
         KeybindMenu ();
@@ -81,11 +79,11 @@ public class GuiManager : MonoBehaviour {
         mapSelectParent.SetActive (true);
     }
 
-    public void SetUnitIconPosition (bool isServer) {
+    public void SetUnitIconPosition (short networkID) {
         unitIcon.transform.localPosition = new Vector3 (
-            (isServer) ? unitIconPosition : unitIconPosition * -1,
+            (networkID % 2 == 0) ? unitIcon.transform.localPosition.x : unitIcon.transform.localPosition.x * -1,
             unitIcon.transform.localPosition.y,
-            unitIcon.transform.localPosition.z);
+            (networkID < 2) ? unitIcon.transform.localPosition.z : unitIcon.transform.localPosition.z*-1);
     }
 
     public void CreateKeybindButtons (List<List<ActionType>>[] groups, StateManager.View[] gameModes) {

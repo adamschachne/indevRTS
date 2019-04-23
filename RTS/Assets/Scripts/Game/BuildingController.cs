@@ -37,7 +37,7 @@ public class BuildingController : UnitController {
     private void DestroyThis () {
         state.RemoveUnit (this.gameObject);
         this.transform.parent = null;
-        state.selection.CleanupSelection (this.gameObject);
+        state.selection.CleanupSelection (this);
         Destroy (this.gameObject);
     }
 

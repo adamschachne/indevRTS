@@ -117,7 +117,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 415916750189313186}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -12, z: 12}
+  m_LocalPosition: {x: 0, y: 0, z: 50}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 415916751635775957}
@@ -152,6 +152,8 @@ MonoBehaviour:
     canBuildDog: 1
     canBuildMortars: 1
     mapGameMode: 0
+    cameraPosition: {x: 0, y: 24, z: 20}
+    cameraAngle: {x: 50, y: 0, z: 0}
 --- !u!1 &415916750991536022
 GameObject:
   m_ObjectHideFlags: 0

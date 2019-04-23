@@ -4,16 +4,14 @@ using InputActions;
 using UnityEngine;
 
 public class Selection : MonoBehaviour {
-
-    public GameObject SelectionCircle;
-    HashSet<GameObject> selectedUnits;
-    HashSet<GameObject>[] controlGroups;
+    HashSet<UnitController> selectedUnits;
+    HashSet<UnitController>[] controlGroups;
     List<ActionType> controlGroupTypes;
     bool leftClickHeld;
     enum Mode {None,Remove,Add};
     Mode selectionMode;
     Vector3 mousePositionInitial;
-    Vector3[] selFrustumCorners;
+    Vector3[] fc;
     public LayerMask movementLayerMask;
     const float MIN_LENGTH = 0.0005f;
     private bool[] filter;
@@ -36,9 +34,9 @@ public class Selection : MonoBehaviour {
 
         controlGroupTypes = state.input.getTaggedActions ("Control Group", typeof (RTS));
 
-        controlGroups = new HashSet<GameObject>[controlGroupTypes.Count];
+        controlGroups = new HashSet<UnitController>[controlGroupTypes.Count];
         for (int i = 0; i < controlGroups.Length; ++i) {
-            controlGroups[i] = new HashSet<GameObject> ();
+            controlGroups[i] = new HashSet<UnitController> ();
             state.input.Subscribe (ControlGroup, controlGroupTypes[i]);
             mainCamera = Camera.main;
         }
@@ -47,7 +45,7 @@ public class Selection : MonoBehaviour {
     private void OnEnable () {
         leftClickHeld = false;
         selectionMode = Mode.None;
-        selectedUnits = new HashSet<GameObject> ();
+        selectedUnits = new HashSet<UnitController> ();
     }
 
     private void OnDisable () {
@@ -136,22 +134,27 @@ public class Selection : MonoBehaviour {
         height = height == 0 ? MIN_LENGTH : height;
         Rect selRect = new Rect (x, y, width, height);
         Camera camera = mainCamera;
+        Vector3 cp = camera.transform.position;
 
-        selFrustumCorners = new Vector3[4];
-        camera.CalculateFrustumCorners (selRect, camera.farClipPlane, Camera.MonoOrStereoscopicEye.Mono, selFrustumCorners);
+        fc = new Vector3[4];
+        camera.CalculateFrustumCorners (selRect, camera.farClipPlane, Camera.MonoOrStereoscopicEye.Mono, fc);
         for (int i = 0; i < 4; i++) {
             // transform to world space
-            selFrustumCorners[i] = camera.transform.TransformVector (selFrustumCorners[i]);
-            //Debug.DrawRay(camera.transform.position, selFrustumCorners[i], Color.yellow);      
+            fc[i] = camera.transform.TransformVector (fc[i]);
         }
 
         Plane[] selectionVolumePlanes = new Plane[5];
 
-        selectionVolumePlanes[0] = new Plane (selFrustumCorners[2], selFrustumCorners[1], selFrustumCorners[0]);
-        selectionVolumePlanes[1] = new Plane (camera.transform.position, selFrustumCorners[0], selFrustumCorners[1]);
-        selectionVolumePlanes[2] = new Plane (camera.transform.position, selFrustumCorners[1], selFrustumCorners[2]);
-        selectionVolumePlanes[3] = new Plane (camera.transform.position, selFrustumCorners[2], selFrustumCorners[3]);
-        selectionVolumePlanes[4] = new Plane (camera.transform.position, selFrustumCorners[3], selFrustumCorners[0]);
+        selectionVolumePlanes[0] = new Plane (fc[2], fc[1], fc[0]);
+        //DrawDebugPlane(fc[2], fc[1], fc[0], Color.magenta);
+        selectionVolumePlanes[1] = new Plane (cp, fc[0], fc[1]);
+        //DrawDebugPlane(cp, fc[0], fc[1], Color.red);
+        selectionVolumePlanes[2] = new Plane (cp, fc[1], fc[2]);
+        //DrawDebugPlane(cp, fc[1], fc[2], Color.blue);
+        selectionVolumePlanes[3] = new Plane (cp, fc[2], fc[3]);
+        //DrawDebugPlane(cp, fc[2], fc[3], Color.green);
+        selectionVolumePlanes[4] = new Plane (cp, fc[3], fc[0]);
+        //DrawDebugPlane(cp, fc[3], fc[0], Color.yellow);
 
         List<GameObject> objectsWithinBounds = new List<GameObject> ();
 
@@ -165,14 +168,20 @@ public class Selection : MonoBehaviour {
         // return viewportBounds.Contains(mainCamera.WorldToViewportPoint(gameObject.transform.position));
     }
 
-    public void CleanupSelection (GameObject target) {
+    public void DrawDebugPlane(Vector3 p1, Vector3 p2, Vector3 p3, Color c) {
+        Debug.DrawLine(p1, p2, c, 20);
+        Debug.DrawLine(p2, p3, c, 20);
+        Debug.DrawLine(p3, p1, c, 20);
+    }
+
+    public void CleanupSelection (UnitController target) {
         RemoveSelection (target);
-        foreach (HashSet<GameObject> group in controlGroups) {
+        foreach (HashSet<UnitController> group in controlGroups) {
             group.Remove (target);
         }
     }
 
-    private void RemoveSelection (GameObject target, bool removeFromList = true) {
+    private void RemoveSelection (UnitController target, bool removeFromList = true) {
         bool selectedIndex = this.selectedUnits.Contains (target);
         if (selectedIndex) {
             //target.GetComponent<Outline>().OutlineWidth = 0.0f;
@@ -188,7 +197,7 @@ public class Selection : MonoBehaviour {
 
     private void DeselectAll () {
         //Debug.Log("Deselect All");
-        foreach (GameObject unit in this.selectedUnits) {
+        foreach (UnitController unit in this.selectedUnits) {
             RemoveSelection (unit, false);
         }
 
@@ -196,7 +205,7 @@ public class Selection : MonoBehaviour {
         this.selectedUnits.Clear ();
     }
 
-    private void AddSelection (GameObject target) {
+    private void AddSelection (UnitController target) {
         this.selectedUnits.Add (target);
         //target.GetComponent<Outline>().OutlineWidth = 6.0f;
         Selectable selected = target.GetComponent<Selectable> ();
@@ -216,18 +225,19 @@ public class Selection : MonoBehaviour {
             if (obj.layer == LayerMask.NameToLayer ("Ground")) {
                 string[] names = new string[selectedUnits.Count];
                 int i = 0;
-                foreach (GameObject g in selectedUnits) {
+                foreach (UnitController g in selectedUnits) {
                     names[i++] = g.name;
                 }
 
                 StateManager.state.BlobMove (names, state.network.networkID, hitInfo.point.x, hitInfo.point.y, hitInfo.point.z);
-                StateManager.state.network.SendMessage (new MoveMany {
-                    ids = names,
+                MoveMany msg = new MoveMany {
+                        ids = names,
                         ownerID = state.network.networkID,
                         x = hitInfo.point.x,
                         y = hitInfo.point.y,
                         z = hitInfo.point.z
-                });
+                    };
+                StateManager.state.network.SendMessage(msg);
             }
         }
     }
@@ -236,26 +246,27 @@ public class Selection : MonoBehaviour {
         RaycastHit hitInfo = new RaycastHit ();
         if (Physics.Raycast (mainCamera.ScreenPointToRay (Input.mousePosition), out hitInfo, Mathf.Infinity, movementLayerMask, QueryTriggerInteraction.Ignore)) {
             GameObject obj = hitInfo.transform.gameObject;
+            bool relative = (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            string[] ids = new string[selectedUnits.Count];
+            int found = 0;
+            foreach (UnitController unit in selectedUnits) {
+                ids[found++] = unit.name;
+                if(!relative) {
+                    unit.ShowTeaserAttack (hitInfo.point.x, hitInfo.point.z, true);
+                } 
+            }
 
-            if (obj.layer == LayerMask.NameToLayer ("Ground")) {
-                Debug.Log("teasing an attack");
-                bool relative = (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
-                string[] ids = new string[selectedUnits.Count];
-                int found =0;
-                foreach (GameObject unit in selectedUnits) {
-                    ids[found++] = unit.name;
-                    if(!relative) {
-                        unit.GetComponent<UnitController> ().ShowTeaserAttack (hitInfo.point.x, hitInfo.point.z, true);
-                    } 
+            if(relative) {
+                UnitController[] units = state.GetUnits(ids, state.network.networkID);
+                Vector2[] relativePositions = state.GetRelativePoints(units, hitInfo.point.x, hitInfo.point.z);
+                for(int i = 0; i < units.Length; i++) {
+                    units[i].ShowTeaserAttack(relativePositions[i].x, relativePositions[i].y, true);
                 }
-
-                if(relative) {
-                    UnitController[] units = state.GetUnits(ids, state.network.networkID);
-                    Vector2[] relativePositions = state.GetRelativePoints(units, hitInfo.point.x, hitInfo.point.z);
-                    for(int i = 0; i < units.Length; i++) {
-                        units[i].ShowTeaserAttack(relativePositions[i].x, relativePositions[i].y, true);
-                    }
-                }
+            }
+        }
+        else {
+            foreach(UnitController unit in selectedUnits) {
+                unit.ShowTeaserAttack(0, 0, false);
             }
         }
     }
@@ -271,12 +282,11 @@ public class Selection : MonoBehaviour {
 
                 string[] ids = new string[selectedUnits.Count];
                 int found =0;
-                foreach (GameObject unit in selectedUnits) {
+                foreach (UnitController unit in selectedUnits) {
                     ids[found++] = unit.name;
                     if(!relative) {
-                        UnitController uc = unit.GetComponent<UnitController>();
-                        uc.ShowTeaserAttack(0,0,false);
-                        uc.Attack (hitInfo.point.x, hitInfo.point.z);
+                        unit.ShowTeaserAttack(0,0,false);
+                        unit.Attack (hitInfo.point.x, hitInfo.point.z);
                     }
                 }
 
@@ -284,21 +294,22 @@ public class Selection : MonoBehaviour {
                     StateManager.state.RelativeAttack(ids, state.network.networkID, hitInfo.point.x, hitInfo.point.z);
                 }
 
-                state.network.SendMessage (new AttackMany {
-                    ids = ids,
-                    ownerID = state.network.networkID,
-                    x = hitInfo.point.x,
-                    z = hitInfo.point.z,
-                    relative = relative
-                });
+                AttackMany am = new AttackMany {
+                        ids = ids,
+                        ownerID = state.network.networkID,
+                        x = hitInfo.point.x,
+                        z = hitInfo.point.z,
+                        relative = relative
+                    };
+                state.network.SendMessage(am);
             }
         }
 
     }
 
     private void Stop () {
-        foreach (GameObject unit in selectedUnits) {
-            unit.GetComponent<UnitController> ().CmdMoveTo (new Vector3 (unit.transform.position.x, unit.transform.position.y, unit.transform.position.z));
+        foreach (UnitController unit in selectedUnits) {
+            unit.CmdMoveTo (new Vector3 (unit.transform.position.x, unit.transform.position.y, unit.transform.position.z));
         }
     }
 
@@ -315,8 +326,8 @@ public class Selection : MonoBehaviour {
         if (Vector3.Distance (Input.mousePosition, mousePositionInitial) == 0.0f) {
             RaycastHit hitInfo = new RaycastHit ();
             if ((Physics.Raycast (mainCamera.ScreenPointToRay (Input.mousePosition), out hitInfo))) {
-                GameObject obj = hitInfo.transform.gameObject;
-                if (obj.GetComponent<Selectable> () != null) {
+                UnitController obj = hitInfo.transform.gameObject.GetComponent<UnitController>();
+                if (obj != null && obj.GetComponent<Selectable> () != null) {
                     if (this.selectionMode == Mode.Remove) {
                         RemoveSelection (obj);
                     } else if (this.selectionMode == Mode.Add) {
@@ -347,15 +358,15 @@ public class Selection : MonoBehaviour {
             foreach (GameObject obj in WithinSelectionBounds (FindObjectsOfType<Selectable> ())) {
                 UnitController unitType = obj.GetComponent<UnitController>();
                 //exclude buildings from box-select
-                if (unitType is BuildingController) {
+                if (unitType == null || unitType is BuildingController) {
                     continue;
                 }
 
                 if(!useFilter || (useFilter && filter[(int)unitType.type])) {
                     if (this.selectionMode == Mode.Remove) {
-                        RemoveSelection (obj);
+                        RemoveSelection (unitType);
                     } else {
-                        AddSelection (obj);
+                        AddSelection (unitType);
                     }
                 }
             }
@@ -371,13 +382,13 @@ public class Selection : MonoBehaviour {
                     Input.GetKey (KeyCode.LeftControl) || Input.GetKey (KeyCode.RightControl) ||
                     Input.GetKey (KeyCode.LeftAlt) || Input.GetKey (KeyCode.RightAlt)) {
                     controlGroups[i].Clear ();
-                    controlGroups[i] = new HashSet<GameObject> (selectedUnits);
+                    controlGroups[i] = new HashSet<UnitController> (selectedUnits);
                 }
                 //select our control group
                 else {
                     if (controlGroups[i].Count != 0) {
                         DeselectAll ();
-                        foreach (GameObject unit in controlGroups[i]) {
+                        foreach (UnitController unit in controlGroups[i]) {
                             AddSelection (unit);
                         }
                     }

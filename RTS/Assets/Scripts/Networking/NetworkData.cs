@@ -3,9 +3,35 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum MessageType {
+    ServerOnly,
+    ClientOnly,
+    ServerAndClient
+}
+
 [Serializable]
 public class Message {
+    [Newtonsoft.Json.JsonIgnore]
+    public virtual MessageType mt {
+        get {
+            return MessageType.ServerAndClient;
+        }
+    }
     public virtual void process () { Debug.Log ("Network Message not typecasted correctly, or Process func not defined."); }
+    public bool ShouldRun() {
+        if(mt == MessageType.ServerAndClient) {
+            return true;
+        }
+        else if(mt == MessageType.ServerOnly && StateManager.state.isServer) {
+            return true;
+        }
+        else if(mt == MessageType.ClientOnly && !StateManager.state.isServer) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 }
 
 [Serializable]
@@ -17,42 +43,59 @@ public class NetworkUnit : Message {
 
 [Serializable]
 public class SyncUnits : Message {
+    [Newtonsoft.Json.JsonIgnore]
+    public override MessageType mt {
+        get {
+            return MessageType.ClientOnly;
+        }
+    }
     public NetworkUnit[] units;
     //public short connectionId;
     public override void process () {
         // Client Only
-        if (StateManager.state.isServer == true) {
-            return;
-        }
+        if (ShouldRun()) {
+            foreach (NetworkUnit netUnit in this.units) {
+                short ownerID = netUnit.ownerID;
+                StateManager.state.AddUnit (ownerID, netUnit.unitType, netUnit.id);
+            }
 
-        foreach (NetworkUnit netUnit in this.units) {
-            short ownerID = netUnit.ownerID;
-            StateManager.state.AddUnit (ownerID, netUnit.unitType, netUnit.id);
+            StateManager.state.ResetScores ();
         }
-
-        StateManager.state.ResetScores ();
     }
 }
 
 [Serializable]
 public class AddUnit : Message {
+    [Newtonsoft.Json.JsonIgnore]
+    public override MessageType mt {
+        get {
+            return MessageType.ClientOnly;
+        }
+    }
     public short ownerID; // the connection that added a unit
     public NetworkUnit unit; // the unit added
     public override void process () {
         // Client Only
-        if (StateManager.state.isServer == true) {
-            return;
+        if (ShouldRun()) {
+            StateManager.state.AddUnit (this.ownerID, this.unit.unitType, this.unit.id);
         }
-        StateManager.state.AddUnit (this.ownerID, this.unit.unitType, this.unit.id);
     }
 }
 
 [Serializable]
 public class RequestUnit : Message {
+    [Newtonsoft.Json.JsonIgnore]
+    public override MessageType mt {
+        get {
+            return MessageType.ServerOnly;
+        }
+    }
     public short ownerID; // the connection that requested a unit
     public StateManager.EntityType unitType;
     public override void process () {
-        StateManager.state.network.HandleRequestUnit (this);
+        if (ShouldRun()) {
+            StateManager.state.network.HandleRequestUnit (this);
+        }
     }
 }
 
@@ -78,26 +121,8 @@ public class MoveMany : Message {
 
     public override void process () {
         StateManager.state.BlobMove (ids, ownerID, x, y, z);
-        /*
-        foreach(string id in this.ids) {
-            StateManager.state.MoveCommand(this.ownerID, id, this.x, this.y, this.z);
-        }
-        */
     }
 }
-
-/*
-[Serializable]
-public class Attack : Message {
-    public string id;
-    public short ownerID;
-    public float x;
-    public float z;
-    public override void process () {
-        StateManager.state.AttackCommand (this.ownerID, this.id, this.x, this.z);
-    }
-}
-*/
 
 [Serializable]
 public class AttackMany : Message {
@@ -111,7 +136,7 @@ public class AttackMany : Message {
             StateManager.state.RelativeAttack(ids, ownerID, x, z);
         } else {
             foreach(string id in this.ids) {
-                StateManager.state.AttackCommand (this.ownerID, id, this.x, this.z);
+                StateManager.state.AttackCommand(this.ownerID, id, this.x, this.z);
             }
         }
     }
@@ -128,13 +153,19 @@ public class Damage : Message {
 }
 
 [Serializable]
-public class SyncPos : Message {
-    public string id;
-    public short ownerID;
-    public float x;
-    public float z;
+public class SyncAll : Message {
+    [Newtonsoft.Json.JsonIgnore]
+    public override MessageType mt {
+        get {
+            return MessageType.ClientOnly;
+        }
+    }
+    public string[] ids;
+    public Vector2[] pos;
     public override void process () {
-        StateManager.state.SyncPos (this.ownerID, this.id, this.x, this.z);
+        if(ShouldRun()) {
+            StateManager.state.SyncPos (ids, pos);
+        }
     }
 }
 
@@ -148,42 +179,112 @@ public class Batch : Message {
     }
 }
 
+/*
 [Serializable]
 public class Connected : Message {
+    [Newtonsoft.Json.JsonIgnore]
+    public override MessageType mt {
+        get {
+            return MessageType.ServerOnly;
+        }
+    }
     public short playerID;
-
+    public short serverID;
     public override void process () {
-        StateManager.state.gui.mapSelect.RecieveConnected (playerID);
+        if(ShouldRun()) {
+            StateManager.state.network.RecieveClientConnected(serverID);
+        }
     }
 }
+*/
 
 [Serializable]
-public class SyncMapSelect : Message {
-    public MapSelect.MapSelectState state;
-    public override void process () {
-        StateManager.state.gui.mapSelect.RecieveSync (this.state);
+public class AssignClient : Message {
+    [Newtonsoft.Json.JsonIgnore]
+    public override MessageType mt {
+        get {
+            return MessageType.ClientOnly;
+        }
     }
-}
-
-[Serializable]
-public class StartGame : Message {
-    //when server sees a request
-    public override void process () {
-        if (!StateManager.state.isServer) {
-            StateManager.state.StartGame ();
-            StateManager.state.network.SendMessage (new RequestSync ());
+    public short playerID;
+    public string address;
+    public override void process() {
+        if(ShouldRun()) {
+            StateManager.state.network.SetupClient(playerID, address);
         }
     }
 }
 
 [Serializable]
-//todo: only waits to hear 1 sync request to send the sync out to all clients.
-public class RequestSync : Message {
+public class ConfirmClient : Message {
+    [Newtonsoft.Json.JsonIgnore]
+    public override MessageType mt {
+        get {
+            return MessageType.ServerOnly;
+        }
+    }
+    public short playerID;
+    public override void process() {
+        if(ShouldRun()) {
+            StateManager.state.gui.mapSelect.RecieveConnected (playerID);
+        }
+    }
+}
+
+[Serializable]
+public class RefuseConnection : Message {
+    public String reason;
+    public override void process() {
+        Debug.Log("Connection was refused. Reason: " + reason);
+        StateManager.state.network.Reset();
+        StateManager.state.gui.Cleanup();
+    }
+}
+
+[Serializable]
+public class SyncMapSelect : Message {
+    [Newtonsoft.Json.JsonIgnore]
+    public override MessageType mt {
+        get {
+            return MessageType.ClientOnly;
+        }
+    }
+    public MapSelect.MapSelectState state;
     public override void process () {
-        if (StateManager.state.isServer) {
+        if (ShouldRun()) {
+            StateManager.state.gui.mapSelect.RecieveSync(this.state);
+        }
+    }
+}
+
+[Serializable]
+public class StartGame : Message {
+    [Newtonsoft.Json.JsonIgnore]
+    public override MessageType mt {
+        get {
+            return MessageType.ClientOnly;
+        }
+    }
+    public override void process () {
+        if (ShouldRun()) {
+            StateManager.state.StartGame ();
+            StateManager.state.network.SendMessageToServer(new RequestSync (), false);
+        }
+    }
+}
+
+[Serializable]
+public class RequestSync : Message {
+    [Newtonsoft.Json.JsonIgnore]
+    public override MessageType mt {
+        get {
+            return MessageType.ServerOnly;
+        }
+    }
+    public override void process () {
+        if (ShouldRun()) {
             //instantiate start of game units
             StateManager.state.StartOfGameUnits ();
-
             StateManager.state.network.SendSync ();
         }
     }
@@ -191,12 +292,18 @@ public class RequestSync : Message {
 
 [Serializable]
 public class Vote : Message {
+    [Newtonsoft.Json.JsonIgnore]
+    public override MessageType mt {
+        get {
+            return MessageType.ServerOnly;
+        }
+    }
     public short networkID;
     public short votableID;
     public bool vote;
 
     public override void process () {
-        if (StateManager.state.isServer) {
+        if (ShouldRun()) {
             StateManager.state.gui.mapSelect.RecieveVote (this.votableID, this.networkID, this.vote);
         }
     }
