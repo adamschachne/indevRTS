@@ -2321,7 +2321,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8729ec046945e5c4bbefd59742f357ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapIcon: {fileID: 21300000, guid: d72993a7c1a1b07489b6a26f3a9ac259, type: 3}
+  mapIcon: {fileID: 21300000, guid: bd11f3d8ee2bd344c94cd51f59586929, type: 3}
   mapInfo:
     numberSupportedPlayers: 4
     flagPositions:
@@ -2341,6 +2341,7 @@ MonoBehaviour:
     mapGameMode: 0
     cameraPosition: {x: 0, y: 43.5, z: 86.5}
     cameraAngle: {x: 75, y: 0, z: 0}
+    size: Large
 --- !u!1 &4313312115027527934
 GameObject:
   m_ObjectHideFlags: 0

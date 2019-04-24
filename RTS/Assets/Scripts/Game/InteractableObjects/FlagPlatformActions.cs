@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class FlagPlatformActions : InteractableActions {
     public GameObject flagPrefab;
-    private GameObject flag;
+    private FlagActions flag;
     [SerializeField]
     private bool flagIsHome;
     private Vector3 flagPos;
@@ -15,8 +15,10 @@ public class FlagPlatformActions : InteractableActions {
     void Awake () {
         string parentName = transform.parent.gameObject.name;
         flagPos = new Vector3 (this.transform.position.x, this.transform.position.y + flagPrefab.transform.position.y, this.transform.position.z);
-        flag = Instantiate (flagPrefab, flagPos, flagPrefab.transform.rotation, this.transform.parent);
-        flag.GetComponent<FlagActions> ().setHome (this.gameObject);
+        if(flag == null) {
+            flag = Instantiate (flagPrefab, flagPos, flagPrefab.transform.rotation, this.transform.parent).GetComponent<FlagActions>();
+        }
+        flag.setHome (this.gameObject);
         flagIsHome = true;
         netID = short.Parse (parentName.Remove (0, 3));
         platformRenderer.material.color = GuiManager.GetColorByNetID (netID);
@@ -27,12 +29,12 @@ public class FlagPlatformActions : InteractableActions {
     public override void trigger (Collider other) {
         FlagActions flag;
         //an un-allied flag collided with this platform
-        if ((flag = other.gameObject.GetComponent<FlagActions> ()) != null &&
-            flag.getNetID () != netID && flagIsHome) {
+        if (flagIsHome && (flag = other.gameObject.GetComponent<FlagActions> ()) != null && flag.getNetID () != netID) {
             //score a point
             StateManager.state.ScorePoint (netID);
             //return the opponent's flag
             flag.returnFlag ();
+            //set lockout window
         }
     }
 
@@ -45,7 +47,7 @@ public class FlagPlatformActions : InteractableActions {
     }
 
     public void returnFlag () {
-        flag.GetComponent<FlagActions> ().getDropped ();
+        flag.getDropped ();
         flagIsHome = true;
         flag.transform.position = flagPos;
     }

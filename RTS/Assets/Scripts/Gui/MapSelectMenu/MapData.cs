@@ -21,6 +21,7 @@ public class MapData : MonoBehaviour {
         public GameMode mapGameMode;
         public Vector3 cameraPosition;
         public Vector3 cameraAngle;
+        public string size;
     }
 
     public MapInfo mapInfo;
@@ -54,6 +55,7 @@ public class MapData : MonoBehaviour {
         mapInfo.mapGameMode = GameMode.CaptureTheFlag;
         mapInfo.flagPositions = new Vector3[mapInfo.numberSupportedPlayers];
         mapInfo.unitSpawnPositions = new Vector3[mapInfo.numberSupportedPlayers];
+        mapInfo.size = "Medium";
     }
 
     public void OnValidate () {

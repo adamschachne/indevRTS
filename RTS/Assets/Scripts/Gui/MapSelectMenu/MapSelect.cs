@@ -63,9 +63,13 @@ public class MapSelect {
 
         GameObject mapButtonPrefab = Resources.Load ("Prefabs/MapButton", typeof (GameObject)) as GameObject;
         GameObject[] maps = Resources.LoadAll<GameObject> ("Maps");
-        float xPos = -500f;
+        float buttonWidth = mapButtonPrefab.GetComponent<RectTransform>().rect.width;
+        float buttonHeight = mapButtonPrefab.GetComponent<RectTransform>().rect.height;
         float xOffset = 50f;
-        float yPos = 0f;
+        float yOffset = 50f;
+        float xStart = Mathf.Max((-1*Screen.width/2) + buttonWidth, -1*(buttonWidth*maps.Length)/2);
+        float xPos = xStart;
+        float yPos = 50f;
 
         foreach (GameObject map in maps) {
             GameObject mapButton = UnityEngine.Object.Instantiate (mapButtonPrefab, mapButtonParent);
@@ -74,6 +78,10 @@ public class MapSelect {
             xPos += mapButton.GetComponent<RectTransform> ().rect.width + xOffset;
             buttonScript.init (map.GetComponent<MapData> (), mapPreview);
             mapButton.SetActive (true);
+            if(xPos > (xStart*-1)) {
+                xPos = xStart;
+                yPos -= buttonHeight + yOffset;
+            }
         }
 
         voteables = mapSelectMenu.GetComponentsInChildren<Voteable> (true);
@@ -108,17 +116,6 @@ public class MapSelect {
     public MapSelectState GetMapSelectState () {
         return mapState;
     }
-
-    //networking functions to send and recieve messages
-/*
-    public void SendConnected () {
-        if (!state.isServer) {
-            network.SendMessage (new Connected {
-                playerID = network.networkID
-            });
-        }
-    }
-*/
 
     private void SetPlayerConnected (short id, bool isConnected) {
         if(isConnected) {

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 752726768609037399}
   - component: {fileID: 1444314717947380593}
   - component: {fileID: 8124174016919460685}
-  - component: {fileID: 2418242462296139717}
+  - component: {fileID: 1252228595562013790}
   - component: {fileID: 4879250153647608768}
   m_Layer: 5
   m_Name: Button
@@ -77,7 +77,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
---- !u!114 &2418242462296139717
+--- !u!114 &1252228595562013790
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -86,7 +86,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1670992481918688995}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9ae82fbdc41459d4bb730dddded0d003, type: 3}
+  m_Script: {fileID: 11500000, guid: 64a8d8d1f74a71f48a2b9111f5db88f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &4879250153647608768
@@ -106,7 +106,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2418242462296139717}
+        - m_Target: {fileID: 1252228595562013790}
           m_MethodName: OnPointerEnter
           m_Mode: 1
           m_Arguments:
@@ -123,7 +123,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2418242462296139717}
+        - m_Target: {fileID: 1252228595562013790}
           m_MethodName: OnPointerExit
           m_Mode: 1
           m_Arguments:
@@ -332,8 +332,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -5}
-  m_SizeDelta: {x: 0, y: -10}
+  m_AnchoredPosition: {x: 0, y: 12.5}
+  m_SizeDelta: {x: 0, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &623921000891435574
 CanvasRenderer:

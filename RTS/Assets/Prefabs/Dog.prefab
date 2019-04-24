@@ -66,6 +66,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hitReticle: {fileID: 0}
+  colorRenderer: {fileID: 8923002643368584623}
 --- !u!114 &4744134747472893858
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -205,6 +206,12 @@ PrefabInstance:
 --- !u!4 &8923002643355022473 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400006, guid: 74ecc304706eeb946a2816a13e2d62db,
+    type: 3}
+  m_PrefabInstance: {fileID: 8923002643354889743}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &8923002643368584623 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 13700000, guid: 74ecc304706eeb946a2816a13e2d62db,
     type: 3}
   m_PrefabInstance: {fileID: 8923002643354889743}
   m_PrefabAsset: {fileID: 0}

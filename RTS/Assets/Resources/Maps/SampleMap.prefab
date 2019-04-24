@@ -511,6 +511,7 @@ MonoBehaviour:
     mapGameMode: 0
     cameraPosition: {x: 0, y: 12, z: -13}
     cameraAngle: {x: 50, y: 0, z: 0}
+    size: Small
 --- !u!1 &194648642256004640
 GameObject:
   m_ObjectHideFlags: 0

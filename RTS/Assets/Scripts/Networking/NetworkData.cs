@@ -283,9 +283,7 @@ public class RequestSync : Message {
     }
     public override void process () {
         if (ShouldRun()) {
-            //instantiate start of game units
-            StateManager.state.StartOfGameUnits ();
-            StateManager.state.network.SendSync ();
+            StateManager.state.ClientReady();
         }
     }
 }

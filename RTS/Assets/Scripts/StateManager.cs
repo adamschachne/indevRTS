@@ -69,8 +69,7 @@ public class StateManager : MonoBehaviour {
     private Transform[] objectLists;
     private List<string> syncIDs;
     private List<Vector2> syncPos;
-    public long frameCount;
-    public short syncRate;
+    private short readyClients;
     private static StateManager s;
     [HideInInspector]
     public static StateManager state {
@@ -142,7 +141,6 @@ public class StateManager : MonoBehaviour {
     }
 
     void FixedUpdate () {
-        ++frameCount;
         if (unitIsBuilding) {
             remainingBuildTime -= Time.deltaTime;
             gui.UpdateUnitLoad (remainingBuildTime / BuildTime (unitToBuild));
@@ -183,6 +181,7 @@ public class StateManager : MonoBehaviour {
         objectLists = new Transform[currentMap.mapInfo.numberSupportedPlayers];
         syncIDs = new List<string>();
         syncPos = new List<Vector2>();
+        readyClients = 0;
         for (int i = 0; i < currentMap.mapInfo.numberSupportedPlayers; i++) {
             unitLists[i] = Instantiate (gameUnitsPrefab, gameUnits.transform).GetComponent<Transform> ();
             unitLists[i].gameObject.name = "GU-" + i;
@@ -440,6 +439,7 @@ public class StateManager : MonoBehaviour {
         inGame = false;
         CleanObjects ();
         CancelBuild ();
+        readyClients = 0;
         selection.enabled = false;
         //show Lobby UI
         gui.Cleanup ();
@@ -484,7 +484,14 @@ public class StateManager : MonoBehaviour {
         }
     }
 
-    public void StartOfGameUnits () {
+    public void ClientReady() {
+        if(++readyClients == network.GetConnectionsCount()) {
+            StartOfGameUnits();
+            network.SendSync();
+        }
+    }
+
+    private void StartOfGameUnits () {
         Debug.Log("Creating start of game units for " + network.GetConnectionsCount() + " connections.");
         for(short i = 0; i <= network.GetConnectionsCount(); ++i) {
             StateManager.state.AddUnit (i, StateManager.EntityType.FlagPlatform, null);

@@ -7,8 +7,11 @@ public class VoteableGroup : MonoBehaviour {
     List<VoteableGroupMember> groupMembers;
     Image border;
     RectTransform rt;
-    Vector2 sizeDeltaRef;
-    private const float yBuffer = 100f;
+    float left;
+    float right;
+    float top;
+    float bot;
+    private const float yBuffer = 50f;
     private const float xBuffer = 50f;
     public VoteableGroup () {
         groupMembers = new List<VoteableGroupMember> ();
@@ -18,7 +21,6 @@ public class VoteableGroup : MonoBehaviour {
         if (border == null) {
             border = this.transform.GetChild (0).GetComponent<Image> ();
             rt = this.transform.GetChild (0).GetComponent<RectTransform> ();
-            sizeDeltaRef = new Vector2 (xBuffer, yBuffer);
         }
     }
 
@@ -26,19 +28,16 @@ public class VoteableGroup : MonoBehaviour {
         if (!groupMembers.Contains (v)) {
             groupMembers.Add (v);
 
-            sizeDeltaRef.x += v.rt.sizeDelta.x + xBuffer;
-            if (sizeDeltaRef.y - yBuffer < v.rt.sizeDelta.y) {
-                sizeDeltaRef.y = v.rt.sizeDelta.y + yBuffer;
-            }
-            rt.sizeDelta = sizeDeltaRef;
+            if(v.rt.localPosition.x - v.rt.sizeDelta.x/2 - xBuffer < left) left = v.rt.localPosition.x - v.rt.sizeDelta.x/2 - xBuffer;
+            if(v.rt.localPosition.x + v.rt.sizeDelta.x/2 + xBuffer > right) right = v.rt.localPosition.x + v.rt.sizeDelta.x/2 + xBuffer;
+            if(v.rt.localPosition.y - v.rt.sizeDelta.y/2 - yBuffer < bot) bot = v.rt.localPosition.y - v.rt.sizeDelta.y/2 - yBuffer;
+            if(v.rt.localPosition.y + v.rt.sizeDelta.y/2 + yBuffer > top) top = v.rt.localPosition.y + v.rt.sizeDelta.y/2 + yBuffer;
 
-            Vector3 avgPos = new Vector3 ();
-            foreach (VoteableGroupMember vgm in groupMembers) {
-                avgPos += vgm.rt.position;
-            }
+            
+            rt.sizeDelta = new Vector2(Mathf.Abs(left) + right, Mathf.Abs(bot) + top);
 
-            avgPos /= groupMembers.Count;
-            rt.position = avgPos;
+            
+            rt.localPosition = new Vector3((right+left)/2, (top+bot)/2, 0);
         }
 
     }

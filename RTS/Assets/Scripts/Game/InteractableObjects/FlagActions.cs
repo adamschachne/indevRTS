@@ -18,7 +18,6 @@ public class FlagActions : InteractableActions {
         netID = short.Parse (parentName.Remove (0, 3));
         flagBox.material.color = GuiManager.GetColorByNetID (netID);
         startingRotation = this.transform.rotation;
-
     }
 
     public void setHome (GameObject other) {

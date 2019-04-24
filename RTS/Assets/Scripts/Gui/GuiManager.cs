@@ -82,8 +82,8 @@ public class GuiManager : MonoBehaviour {
     public void SetUnitIconPosition (short networkID) {
         unitIcon.transform.localPosition = new Vector3 (
             (networkID % 2 == 0) ? unitIcon.transform.localPosition.x : unitIcon.transform.localPosition.x * -1,
-            unitIcon.transform.localPosition.y,
-            (networkID < 2) ? unitIcon.transform.localPosition.z : unitIcon.transform.localPosition.z*-1);
+            (networkID < 2) ? unitIcon.transform.localPosition.y : unitIcon.transform.localPosition.y*-1,
+            unitIcon.transform.localPosition.z);
     }
 
     public void CreateKeybindButtons (List<List<ActionType>>[] groups, StateManager.View[] gameModes) {

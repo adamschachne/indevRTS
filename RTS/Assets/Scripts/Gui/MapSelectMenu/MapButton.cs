@@ -21,7 +21,7 @@ public class MapButton : Button {
         rTrans.sizeDelta = new Vector2 (i.sprite.rect.width / 4, i.sprite.rect.height / 4);
 
         this.transform.GetChild (1).GetComponent<Text> ().text = map.name;
-        this.transform.GetChild (0).GetComponent<ShowMapPreview> ().init (map.mapIcon, mapPreview, this.transform);
+        this.transform.GetChild (0).GetComponent<ShowMapPreview> ().init (map, map.mapIcon, mapPreview, this.transform);
         Voteable v = GetComponent<Voteable> ();
         v.decisionCallback.AddListener (StateManager.state.AssignStartMap);
 
